@@ -52,7 +52,10 @@ jobs:
       - name: Fetch and prepare price data
         run: |
           cd data
+          # Fetch stock prices
           python get_daily_price.py
+          # Fetch crypto prices for BTC and ETH
+          python get_crypto_prices.py
           python merge_jsonl.py
           cd ..
 
@@ -69,9 +72,9 @@ jobs:
           docker compose -f docker-compose.yml ps
         timeout-minutes: 10
 
-      - name: Run trading simulation
+      - name: Run crypto trading simulation
         run: |
-          python main.py
+          python main.py configs/crypto_config.json
         env:
           AGENT_MAX_STEP: 30
           PYTHONUNBUFFERED: 1
