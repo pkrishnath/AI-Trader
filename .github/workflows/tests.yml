@@ -1,0 +1,157 @@
+name: Tests & Validation
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Linting & Code Quality
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install linting tools
+        run: |
+          pip install flake8 black isort pylint
+
+      - name: Run flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Check black formatting
+        run: |
+          black --check . --exclude="\.git|\.venv|build|dist"
+
+      - name: Check import sorting
+        run: |
+          isort --check-only . --skip-glob="\.git|\.venv|build|dist"
+
+  test-units:
+    runs-on: ubuntu-latest
+    name: Unit Tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio
+
+      - name: Run unit tests
+        run: |
+          pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  validate-config:
+    runs-on: ubuntu-latest
+    name: Configuration Validation
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Validate JSON configs
+        run: |
+          python -m json.tool configs/default_config.json > /dev/null && echo "✓ default_config.json valid"
+          python -m json.tool .runtime_env.json > /dev/null && echo "✓ .runtime_env.json valid"
+
+      - name: Validate environment template
+        run: |
+          if [ -f .env.example ]; then
+            echo "✓ .env.example found"
+            grep -E "^[A-Z_]+=" .env.example && echo "✓ Environment variables properly formatted"
+          fi
+
+  security-check:
+    runs-on: ubuntu-latest
+    name: Security Scanning
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install security tools
+        run: |
+          pip install bandit safety
+
+      - name: Run bandit security check
+        run: |
+          bandit -r . -f json -o bandit-report.json || true
+          echo "Security scan completed. Check logs for details."
+
+      - name: Check for hardcoded secrets
+        run: |
+          git log -p | grep -E "OPENAI_API_KEY|ALPHAADVANTAGE_API_KEY|JINA_API_KEY" && echo "⚠️ Potential secrets in git history" || echo "✓ No obvious secrets detected"
+        continue-on-error: true
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    name: Dependency Audit
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Audit dependencies
+        run: |
+          pip install safety
+          safety check || true
+
+      - name: Check for outdated packages
+        run: |
+          pip install pip-audit
+          pip-audit || true

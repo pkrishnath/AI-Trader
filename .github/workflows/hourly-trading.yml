@@ -1,0 +1,138 @@
+name: Hourly AI Trading Run
+
+on:
+  schedule:
+    # Run every hour at minute 0
+    - cron: '0 * * * *'
+
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+
+  # Also run on push to main (optional)
+  push:
+    branches:
+      - main
+    paths:
+      - 'configs/**'
+      - 'agent/**'
+      - 'main.py'
+
+jobs:
+  trading-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Set up environment
+        run: |
+          cp .env.example .env
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+          echo "ALPHAADVANTAGE_API_KEY=${{ secrets.ALPHAADVANTAGE_API_KEY }}" >> .env
+          echo "JINA_API_KEY=${{ secrets.JINA_API_KEY }}" >> .env
+          echo "MATH_HTTP_PORT=8000" >> .env
+          echo "SEARCH_HTTP_PORT=8001" >> .env
+          echo "TRADE_HTTP_PORT=8002" >> .env
+          echo "GETPRICE_HTTP_PORT=8003" >> .env
+          echo "AGENT_MAX_STEP=30" >> .env
+
+      - name: Fetch and prepare price data
+        run: |
+          cd data
+          python get_daily_price.py
+          python merge_jsonl.py
+          cd ..
+
+      - name: Start MCP services
+        run: |
+          cd agent_tools
+          python start_mcp_services.py &
+          MCP_PID=$!
+          cd ..
+          # Wait for services to start
+          sleep 10
+        timeout-minutes: 5
+
+      - name: Run trading simulation
+        run: |
+          python main.py
+        env:
+          AGENT_MAX_STEP: 30
+          PYTHONUNBUFFERED: 1
+
+      - name: Upload trading results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: trading-results-${{ github.run_id }}
+          path: data/agent_data/
+          retention-days: 30
+
+      - name: Upload merged data
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: merged-data-${{ github.run_id }}
+          path: data/merged.jsonl
+          retention-days: 30
+
+      - name: Generate trading report
+        if: always()
+        run: |
+          # Create a summary of results
+          echo "# Trading Run Report" > trading_report.md
+          echo "**Run ID:** ${{ github.run_id }}" >> trading_report.md
+          echo "**Timestamp:** $(date -u)" >> trading_report.md
+          echo "**Status:** ${{ job.status }}" >> trading_report.md
+          cat trading_report.md
+
+      - name: Comment on workflow
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.actions.createWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'hourly-trading.yml',
+              ref: context.ref
+            });
+            console.log('Trading run completed successfully');
+
+  notify-slack:
+    needs: trading-run
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK != ''
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "AI Trading Run ${{ needs.trading-run.result }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "🤖 *AI Trading Run* ${{ needs.trading-run.result == 'success' && '✅' || '❌' }}\n*Run ID:* ${{ github.run_id }}\n*Ref:* ${{ github.ref }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
