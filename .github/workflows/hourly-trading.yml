@@ -75,10 +75,10 @@ jobs:
             echo "Health check attempt $((attempt + 1))/$max_attempts..."
 
             # Get health status of all services
-            math_health=$(docker compose -f docker-compose.yml ps math-service --format json | jq -r '.[0].Health')
-            search_health=$(docker compose -f docker-compose.yml ps search-service --format json | jq -r '.[0].Health')
-            trade_health=$(docker compose -f docker-compose.yml ps trade-service --format json | jq -r '.[0].Health')
-            prices_health=$(docker compose -f docker-compose.yml ps prices-service --format json | jq -r '.[0].Health')
+            math_health=$(docker compose -f docker-compose.yml ps math-service --format json | jq -r '.Health')
+            search_health=$(docker compose -f docker-compose.yml ps search-service --format json | jq -r '.Health')
+            trade_health=$(docker compose -f docker-compose.yml ps trade-service --format json | jq -r '.Health')
+            prices_health=$(docker compose -f docker-compose.yml ps prices-service --format json | jq -r '.Health')
 
             echo "Math: $math_health | Search: $search_health | Trade: $trade_health | Prices: $prices_health"
 
