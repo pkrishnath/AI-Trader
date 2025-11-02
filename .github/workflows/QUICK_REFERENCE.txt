@@ -1,0 +1,111 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    AI-TRADER GITHUB ACTIONS QUICK REFERENCE                     ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ STEP 1: Add Secrets (GitHub Settings → Secrets and variables → Actions)        │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ 1. OPENAI_API_KEY                    → https://platform.openai.com/api-keys     │
+│ 2. ALPHAADVANTAGE_API_KEY            → https://www.alphavantage.co/api/         │
+│ 3. JINA_API_KEY                      → https://jina.ai/                         │
+│ [Optional] SLACK_WEBHOOK             → Your Slack workspace webhook            │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ STEP 2: Verify Workflows (GitHub Actions tab)                                  │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ ✓ Hourly AI Trading Run   - Runs every hour or on manual trigger               │
+│ ✓ Tests & Validation      - Runs on push/PR                                    │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ STEP 3: Trigger First Run (Actions → Hourly AI Trading Run → Run workflow)     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ Your trading simulation will start immediately! Watch in real-time.             │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                           WORKFLOW SCHEDULES                                   ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║ Hourly Trading Run                                                              ║
+║   Schedule: Every hour at :00 minutes (00:00, 01:00, etc. UTC)                 ║
+║   Can trigger manually: Yes                                                    ║
+║   Runs on: Push to main with config/trading changes                            ║
+║   Output: Artifacts (30-day retention), Slack notifications                    ║
+║                                                                                 ║
+║ Tests & Validation                                                              ║
+║   Schedule: On every push/PR to main/develop                                   ║
+║   Tests: Lint, unit tests, config validation, security, dependencies          ║
+║   Output: Test reports, coverage metrics                                       ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                        GITHUB ACTIONS FREE TIER                                ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║ Public repos:   ∞ (unlimited minutes)                                          ║
+║ Private repos:  2,000 minutes/month free                                       ║
+║                                                                                 ║
+║ Your hourly runs: ~7,200-10,800 min/month                                     ║
+║ → EXCEEDS FREE TIER if private repo                                            ║
+║                                                                                 ║
+║ Solutions:                                                                      ║
+║ • Change to every 6 hours: cron: '0 */6 * * *'  (~1,500-2,200 min/month)     ║
+║ • Upgrade to GitHub Pro: ~$4/month (3,000 min/month)                          ║
+║ • Use self-hosted runner: No minutes consumed                                  ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                         HOW TO VIEW RESULTS                                    ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║ 1. GitHub repo → Actions tab                                                  ║
+║ 2. Click workflow name → Click specific run                                    ║
+║ 3. View logs: Click job name (e.g., "trading-run")                             ║
+║ 4. Download artifacts: Scroll to "Artifacts" section                           ║
+║    • trading-results-[ID]  - Trading simulation output                         ║
+║    • merged-data-[ID]      - Merged stock/trading data                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                        TROUBLESHOOTING QUICK LINKS                             ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║ Read detailed guides:                                                          ║
+║ • GITHUB_ACTIONS_SETUP.md     - Complete setup guide (START HERE!)             ║
+║ • .github/workflows/README.md  - Detailed workflow documentation               ║
+║ • SETUP_SUMMARY.md             - Executive summary                             ║
+║                                                                                 ║
+║ Test locally:                                                                   ║
+║ • Install act: brew install act                                                ║
+║ • Run: act -j trading-run --secret-files .env                                   ║
+║ • Run tests: pytest tests/ -v                                                  ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                        COMMON CRON SCHEDULES                                   ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║ Edit: .github/workflows/hourly-trading.yml → Change cron value                 ║
+║                                                                                 ║
+║ Every hour:         cron: '0 * * * *'        ← CURRENT                         ║
+║ Every 6 hours:      cron: '0 */6 * * *'      ← Recommended for free tier      ║
+║ Every 4 hours:      cron: '0 */4 * * *'                                        ║
+║ Daily 9 AM UTC:     cron: '0 9 * * *'                                          ║
+║ Weekdays 10 AM:     cron: '0 10 * * 1-5'                                       ║
+║ Monday 8 AM:        cron: '0 8 * * 1'                                          ║
+║                                                                                 ║
+║ Cron format: minute hour day-of-month month day-of-week                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                            FILES CREATED                                       ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║ .github/workflows/hourly-trading.yml      - Hourly trading execution           ║
+║ .github/workflows/tests.yml               - Code quality & testing             ║
+║ .github/workflows/README.md               - Workflow documentation             ║
+║ tests/test_config.py                      - Configuration validation tests     ║
+║ tests/test_tools.py                       - Tools validation tests             ║
+║ pytest.ini                                - Pytest configuration               ║
+║ GITHUB_ACTIONS_SETUP.md                   - Quick start guide                  ║
+║ SETUP_SUMMARY.md                          - Executive summary                  ║
+║ .github/workflows/QUICK_REFERENCE.txt     - This file!                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+Need help? Check GITHUB_ACTIONS_SETUP.md in your repo root!
