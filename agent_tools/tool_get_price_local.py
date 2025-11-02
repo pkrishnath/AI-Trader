@@ -41,7 +41,9 @@ def get_price_local(symbol: str, date: str) -> Dict[str, Any]:
 
     data_path = _workspace_data_path(filename)
     if not data_path.exists():
-        return {"error": f"Data file not found: {data_path}", "symbol": symbol, "date": date}
+        # Return graceful error instead of crashing
+        print(f"⚠️  Data file not found: {data_path}. Service starting without data.", file=__import__('sys').stderr)
+        return {"error": f"Data file not found: {data_path}", "symbol": symbol, "date": date, "status": "data_loading"}
 
     with data_path.open("r", encoding="utf-8") as f:
         for line in f:
@@ -76,7 +78,13 @@ def get_price_local(symbol: str, date: str) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    # print("a test case")
-    port = int(os.getenv("GETPRICE_HTTP_PORT", "8003"))
-    mcp.run(transport="streamable-http", port=port)
+    try:
+        port = int(os.getenv("GETPRICE_HTTP_PORT", "8003"))
+        print(f"🚀 LocalPrices service starting on port {port}...", flush=True)
+        mcp.run(transport="streamable-http", port=port)
+    except Exception as e:
+        print(f"❌ Error starting LocalPrices service: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        raise
 
