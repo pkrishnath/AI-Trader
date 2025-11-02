@@ -3,26 +3,28 @@ Cryptocurrency Trading Agent Prompt
 Supports: Bitcoin (BTC) and Ethereum (ETH)
 """
 
-import os
-
-from dotenv import load_dotenv
-
-load_dotenv()
-
 import json
+import os
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+from tools.crypto_tools import (
+    SUPPORTED_CRYPTOS,
+    format_crypto_price_data,
+    get_crypto_latest_price,
+    get_crypto_price_on_date,
+    load_crypto_price_data,
+)
+from tools.general_tools import get_config_value
 
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
-from tools.crypto_tools import (SUPPORTED_CRYPTOS, format_crypto_price_data,
-                                get_crypto_latest_price,
-                                get_crypto_price_on_date,
-                                load_crypto_price_data)
-from tools.general_tools import get_config_value
+load_dotenv()
 
 # Cryptocurrency symbols
 CRYPTO_SYMBOLS = ["BTC", "ETH"]

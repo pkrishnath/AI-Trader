@@ -6,7 +6,6 @@ Encapsulates core functionality including MCP tool management, AI agent creation
 import asyncio
 import json
 import os
-# Import project tools
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -17,15 +16,19 @@ from langchain.agents import create_agent
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_openai import ChatOpenAI
 
+from prompts.agent_prompt import STOP_SIGNAL, get_agent_system_prompt
+from tools.general_tools import (
+    extract_conversation,
+    extract_tool_messages,
+    get_config_value,
+    write_config_value,
+)
+from tools.price_tools import add_no_trade_record
+
 project_root = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 sys.path.insert(0, project_root)
-
-from prompts.agent_prompt import STOP_SIGNAL, get_agent_system_prompt
-from tools.general_tools import (extract_conversation, extract_tool_messages,
-                                 get_config_value, write_config_value)
-from tools.price_tools import add_no_trade_record
 
 # Load environment variables
 load_dotenv()

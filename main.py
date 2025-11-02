@@ -6,11 +6,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
-
 from prompts.agent_prompt import all_nasdaq_100_symbols
-# Import tools and prompts
 from tools.general_tools import get_config_value, write_config_value
+
+load_dotenv()
 
 # Agent class mapping table - for dynamic import and instantiation
 AGENT_REGISTRY = {
