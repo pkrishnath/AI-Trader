@@ -3,34 +3,29 @@ BaseAgent class - Base class for trading agents
 Encapsulates core functionality including MCP tool management, AI agent creation, and trading execution
 """
 
-import os
-import json
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
-from pathlib import Path
-
-from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain_openai import ChatOpenAI
-from langchain.agents import create_agent
-from dotenv import load_dotenv
-
+import json
+import os
 # Import project tools
 import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from dotenv import load_dotenv
+from langchain.agents import create_agent
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_openai import ChatOpenAI
 
 project_root = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 sys.path.insert(0, project_root)
 
-from tools.general_tools import (
-    extract_conversation,
-    extract_tool_messages,
-    get_config_value,
-    write_config_value,
-)
+from prompts.agent_prompt import STOP_SIGNAL, get_agent_system_prompt
+from tools.general_tools import (extract_conversation, extract_tool_messages,
+                                 get_config_value, write_config_value)
 from tools.price_tools import add_no_trade_record
-from prompts.agent_prompt import get_agent_system_prompt, STOP_SIGNAL
 
 # Load environment variables
 load_dotenv()

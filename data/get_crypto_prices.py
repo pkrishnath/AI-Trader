@@ -5,11 +5,12 @@ Supports: Bitcoin (BTC) and Ethereum (ETH)
 CoinGecko API is free and doesn't require authentication
 """
 
-import requests
 import json
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
+
+import requests
 
 # CoinGecko API endpoints
 COINGECKO_API = "https://api.coingecko.com/api/v3"

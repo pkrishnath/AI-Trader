@@ -1,25 +1,23 @@
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
 import json
+import os
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
-import sys
-import os
 
 # Add project root directory to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
-from tools.price_tools import (
-    get_yesterday_date,
-    get_open_prices,
-    get_yesterday_open_and_close_price,
-    get_today_init_position,
-    get_yesterday_profit,
-)
 from tools.general_tools import get_config_value
+from tools.price_tools import (get_open_prices, get_today_init_position,
+                               get_yesterday_date,
+                               get_yesterday_open_and_close_price,
+                               get_yesterday_profit)
 
 all_nasdaq_100_symbols = [
     "NVDA",

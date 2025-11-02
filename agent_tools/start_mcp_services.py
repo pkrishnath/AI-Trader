@@ -5,12 +5,13 @@ Start all four MCP services: Math, Search, TradeTools, LocalPrices
 """
 
 import os
-import sys
-import time
 import signal
 import subprocess
+import sys
 import threading
+import time
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()

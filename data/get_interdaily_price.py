@@ -1,10 +1,10 @@
-import requests
 import os
+
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 import json
-
 
 all_nasdaq_100_symbols = [
     "NVDA",

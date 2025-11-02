@@ -1,7 +1,6 @@
+import glob
 import json
 import os
-import glob
-
 
 all_nasdaq_100_symbols = [
     "NVDA",
