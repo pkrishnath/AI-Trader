@@ -205,6 +205,9 @@ class BaseAgent:
             if "deepseek" in basemodel.lower():
                 self.openai_api_key = os.getenv("DEEPSEEK_API_KEY") or os.getenv("OPENAI_API_KEY")
                 print(f"🔑 Using DeepSeek API key")
+            elif "groq" in basemodel.lower():
+                self.openai_api_key = os.getenv("GROQ_API_KEY") or os.getenv("OPENAI_API_KEY")
+                print(f"🔑 Using Groq API key")
             elif "gpt" in basemodel.lower() or "4o" in basemodel.lower():
                 self.openai_api_key = os.getenv("OPENAI_API_KEY")
                 print(f"🔑 Using OpenAI API key")
@@ -217,6 +220,8 @@ class BaseAgent:
             # Use provider-specific API base URL based on model
             if "deepseek" in basemodel.lower():
                 self.openai_base_url = os.getenv("DEEPSEEK_API_BASE") or "https://api.deepseek.com/v1"
+            elif "groq" in basemodel.lower():
+                self.openai_base_url = os.getenv("GROQ_API_BASE") or "https://api.groq.com/openai/v1"
             elif "gpt" in basemodel.lower() or "4o" in basemodel.lower():
                 self.openai_base_url = os.getenv("OPENAI_API_BASE") or "https://api.openai.com/v1"
             else:

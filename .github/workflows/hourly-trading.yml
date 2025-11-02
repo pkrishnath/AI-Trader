@@ -19,9 +19,10 @@ on:
       llm_model:
         description: 'LLM model to use for trading agent'
         required: true
-        default: 'deepseek'
+        default: 'groq'
         type: choice
         options:
+          - groq
           - deepseek
           - gpt-4o
           - gpt-4-turbo
@@ -63,6 +64,7 @@ jobs:
           # LLM Provider API Keys
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
           echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> .env
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env
           echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" >> .env
           # Third-party APIs
           echo "ALPHAADVANTAGE_API_KEY=${{ secrets.ALPHAADVANTAGE_API_KEY }}" >> .env
@@ -70,6 +72,7 @@ jobs:
           # API Base URLs
           echo "OPENAI_API_BASE=https://api.openai.com/v1" >> .env
           echo "DEEPSEEK_API_BASE=https://api.deepseek.com/v1" >> .env
+          echo "GROQ_API_BASE=https://api.groq.com/openai/v1" >> .env
           # MCP Ports
           echo "MATH_HTTP_PORT=8000" >> .env
           echo "SEARCH_HTTP_PORT=8001" >> .env
@@ -148,9 +151,11 @@ jobs:
           docker exec \
             -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
             -e DEEPSEEK_API_KEY="${{ secrets.DEEPSEEK_API_KEY }}" \
+            -e GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \
             -e ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
             -e OPENAI_API_BASE="https://api.openai.com/v1" \
             -e DEEPSEEK_API_BASE="https://api.deepseek.com/v1" \
+            -e GROQ_API_BASE="https://api.groq.com/openai/v1" \
             -e ALPHAADVANTAGE_API_KEY="${{ secrets.ALPHAADVANTAGE_API_KEY }}" \
             -e JINA_API_KEY="${{ secrets.JINA_API_KEY }}" \
             -e LLM_MODEL="$LLM_MODEL" \
@@ -165,6 +170,7 @@ jobs:
           PYTHONUNBUFFERED: 1
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ALPHAADVANTAGE_API_KEY: ${{ secrets.ALPHAADVANTAGE_API_KEY }}
           JINA_API_KEY: ${{ secrets.JINA_API_KEY }}
