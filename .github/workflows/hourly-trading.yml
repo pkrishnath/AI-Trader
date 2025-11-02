@@ -103,6 +103,9 @@ jobs:
           echo "Service startup complete. Current status:"
           docker compose -f docker-compose.yml ps
 
+          echo "Waiting for 30 seconds before starting the simulation..."
+          sleep 30
+
           python main.py configs/crypto_config.json
         env:
           AGENT_MAX_STEP: 30
