@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy agent tools
+COPY agent_tools/ /app/agent_tools/
+
+# Expose port
+EXPOSE 8001
+
+# Health check endpoint
+HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=5 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')" || exit 1
+
+# Run the search service
+CMD ["python", "agent_tools/tool_jina_search.py"]
