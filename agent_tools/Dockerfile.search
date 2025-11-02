@@ -8,8 +8,9 @@ COPY requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy agent tools
+# Copy agent tools and tools module
 COPY agent_tools/ /app/agent_tools/
+COPY tools/ /app/tools/
 
 # Expose port
 EXPOSE 8001

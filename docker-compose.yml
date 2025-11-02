@@ -29,6 +29,7 @@ services:
     environment:
       - SEARCH_HTTP_PORT=8001
       - JINA_API_KEY=${JINA_API_KEY}
+      - PYTHONPATH=/app
     networks:
       - mcp-network
     healthcheck:
@@ -47,6 +48,7 @@ services:
       - "8002:8002"
     environment:
       - TRADE_HTTP_PORT=8002
+      - PYTHONPATH=/app
     networks:
       - mcp-network
     volumes:
@@ -68,6 +70,7 @@ services:
       - "8003:8003"
     environment:
       - GETPRICE_HTTP_PORT=8003
+      - PYTHONPATH=/app
     networks:
       - mcp-network
     volumes:
