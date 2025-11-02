@@ -22,7 +22,7 @@ EXPOSE 8002
 
 # Health check endpoint
 HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=5 \
-  CMD curl -f http://localhost:8002/ready || exit 1
+  CMD curl -f http://localhost:8002/health || exit 1
 
 # Run the trade service
 CMD ["python", "agent_tools/tool_trade.py"]

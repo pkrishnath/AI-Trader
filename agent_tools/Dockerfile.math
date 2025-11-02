@@ -19,7 +19,7 @@ EXPOSE 8000
 
 # Health check endpoint
 HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=5 \
-  CMD curl -f http://localhost:8000/ready || exit 1
+  CMD curl -f http://localhost:8000/health || exit 1
 
 # Run the math service
 CMD ["python", "agent_tools/tool_math.py"]

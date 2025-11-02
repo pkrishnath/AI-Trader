@@ -20,7 +20,7 @@ EXPOSE 8001
 
 # Health check endpoint
 HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=5 \
-  CMD curl -f http://localhost:8001/ready || exit 1
+  CMD curl -f http://localhost:8001/health || exit 1
 
 # Run the search service
 CMD ["python", "agent_tools/tool_jina_search.py"]

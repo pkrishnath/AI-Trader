@@ -21,7 +21,7 @@ EXPOSE 8003
 
 # Health check endpoint
 HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=5 \
-  CMD curl -f http://localhost:8003/ready || exit 1
+  CMD curl -f http://localhost:8003/health || exit 1
 
 # Run the prices service
 CMD ["python", "agent_tools/tool_get_price_local.py"]
