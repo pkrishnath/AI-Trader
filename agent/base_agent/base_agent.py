@@ -254,6 +254,7 @@ class BaseAgent:
 
         try:
             # Create MCP client
+            print(f"MCP config: {self.mcp_config}")
             self.client = MultiServerMCPClient(self.mcp_config)
 
             # Get tools
@@ -266,6 +267,7 @@ class BaseAgent:
             else:
                 print(f"✅ Loaded {len(self.tools)} MCP tools")
         except Exception as e:
+            print(f"❌ Error during MCP client initialization: {e}")
             raise RuntimeError(
                 f"❌ Failed to initialize MCP client: {e}\n"
                 f"   Please ensure MCP services are running at the configured ports.\n"
