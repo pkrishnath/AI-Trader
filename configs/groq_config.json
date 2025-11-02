@@ -1,0 +1,32 @@
+{
+  "agent_type": "BaseAgent",
+  "crypto_mode": true,
+  "trading_universe": ["BTC", "ETH"],
+  "date_range": {
+    "init_date": "2025-10-28",
+    "end_date": "2025-11-02"
+  },
+  "models": [
+    {
+      "comment": "Groq - FREE, super fast (300+ tokens/sec), no credit card required",
+      "name": "groq-llama3.3",
+      "basemodel": "groq/llama-3.3-70b-versatile",
+      "signature": "groq-crypto-trader",
+      "enabled": true,
+      "openai_base_url": "https://api.groq.com/openai/v1",
+      "openai_api_key": null
+    }
+  ],
+  "agent_config": {
+    "max_steps": 10,
+    "max_retries": 3,
+    "base_delay": 1.0,
+    "initial_cash": 10000.0,
+    "crypto_trading": true,
+    "description": "Cryptocurrency trading with Groq (FREE LLM provider)"
+  },
+  "log_config": {
+    "log_path": "./data/agent_data",
+    "log_prefix": "groq-free"
+  }
+}
