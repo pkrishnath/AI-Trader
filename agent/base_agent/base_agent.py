@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 from langchain.agents import create_agent
+from langchain_anthropic import ChatAnthropic
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_openai import ChatOpenAI
 
@@ -272,14 +273,25 @@ class BaseAgent:
             )
 
         try:
-            # Create AI model
-            self.model = ChatOpenAI(
-                model=self.basemodel,
-                base_url=self.openai_base_url,
-                api_key=self.openai_api_key,
-                max_retries=3,
-                timeout=30,
-            )
+            # Create AI model based on provider
+            if "claude" in self.basemodel.lower():
+                # Use ChatAnthropic for Claude models
+                print(f"🤖 Using Claude model: {self.basemodel}")
+                self.model = ChatAnthropic(
+                    model=self.basemodel.split("/")[-1],  # Extract model name (e.g., claude-3.5-sonnet)
+                    api_key=self.openai_api_key,  # Use OPENAI_API_KEY env var which should contain Claude key
+                    max_retries=3,
+                    timeout=30,
+                )
+            else:
+                # Use ChatOpenAI for other models
+                self.model = ChatOpenAI(
+                    model=self.basemodel,
+                    base_url=self.openai_base_url,
+                    api_key=self.openai_api_key,
+                    max_retries=3,
+                    timeout=30,
+                )
         except Exception as e:
             raise RuntimeError(f"❌ Failed to initialize AI model: {e}")
 
