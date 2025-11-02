@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # Math MCP Service
+  math-service:
+    build:
+      context: .
+      dockerfile: agent_tools/Dockerfile.math
+    ports:
+      - "8000:8000"
+    environment:
+      - MATH_HTTP_PORT=8000
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  # Search MCP Service
+  search-service:
+    build:
+      context: .
+      dockerfile: agent_tools/Dockerfile.search
+    ports:
+      - "8001:8001"
+    environment:
+      - SEARCH_HTTP_PORT=8001
+      - JINA_API_KEY=${JINA_API_KEY}
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  # Trade Tools MCP Service
+  trade-service:
+    build:
+      context: .
+      dockerfile: agent_tools/Dockerfile.trade
+    ports:
+      - "8002:8002"
+    environment:
+      - TRADE_HTTP_PORT=8002
+    networks:
+      - mcp-network
+    volumes:
+      - ./data:/app/data
+      - ./configs:/app/configs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  # Local Prices MCP Service
+  prices-service:
+    build:
+      context: .
+      dockerfile: agent_tools/Dockerfile.prices
+    ports:
+      - "8003:8003"
+    environment:
+      - GETPRICE_HTTP_PORT=8003
+    networks:
+      - mcp-network
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+networks:
+  mcp-network:
+    driver: bridge
