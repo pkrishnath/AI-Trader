@@ -3,26 +3,26 @@
   "crypto_mode": true,
   "trading_universe": ["BTC", "ETH"],
   "date_range": {
-    "init_date": "2025-10-01",
-    "end_date": "2025-10-21"
+    "init_date": "2025-10-28",
+    "end_date": "2025-11-02"
   },
   "models": [
     {
-      "name": "gpt-5",
-      "basemodel": "openai/gpt-5",
-      "signature": "gpt-5",
+      "name": "claude-3.5-sonnet",
+      "basemodel": "anthropic/claude-3.5-sonnet",
+      "signature": "claude-crypto-trader",
       "enabled": true
-    },
-    {
-      "name": "claude-3.7-sonnet",
-      "basemodel": "anthropic/claude-3.7-sonnet",
-      "signature": "claude-3.7-sonnet",
-      "enabled": false
     },
     {
       "name": "deepseek-chat-v3.1",
       "basemodel": "deepseek/deepseek-chat-v3.1",
       "signature": "deepseek-chat-v3.1",
+      "enabled": false
+    },
+    {
+      "name": "gpt-5",
+      "basemodel": "openai/gpt-5",
+      "signature": "gpt-5",
       "enabled": false
     }
   ],
