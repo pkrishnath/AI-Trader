@@ -14,8 +14,8 @@
       "enabled": false
     },
     {
-      "name": "deepseek-chat",
-      "basemodel": "deepseek-chat",
+      "name": "deepseek-chat-v3.1",
+      "basemodel": "deepseek-chat-v3.1",
       "signature": "deepseek-crypto-trader",
       "enabled": true
     },

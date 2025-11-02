@@ -47,6 +47,7 @@ env/
 # Logs
 logs/
 *.log
+docs/agent_log.md
 
 # Runtime files
 .runtime_env.json
