@@ -183,5 +183,13 @@ def fetch_all_crypto_data(
 
 
 if __name__ == "__main__":
-    # Fetch 60 days of historical data for BTC and ETH
-    fetch_all_crypto_data(symbols=["BTC", "ETH"], days=60, output_dir="data")
+    import argparse
+    parser = argparse.ArgumentParser(description='Fetch cryptocurrency price data.')
+    parser.add_argument('--symbols', type=str, default='BTC,ETH', help='Comma-separated list of crypto symbols to fetch.')
+    parser.add_argument('--days', type=int, default=60, help='Number of days of historical data to fetch.')
+    args = parser.parse_args()
+    
+    symbols = [s.strip().upper() for s in args.symbols.split(',')]
+    
+    # Fetch historical data for the given symbols
+    fetch_all_crypto_data(symbols=symbols, days=args.days, output_dir=".")

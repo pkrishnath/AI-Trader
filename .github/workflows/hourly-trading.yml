@@ -7,6 +7,15 @@ on:
 
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
+    inputs:
+      asset_type:
+        description: 'Type of asset to trade (crypto or stock)'
+        required: true
+        default: 'crypto'
+      symbols:
+        description: 'Comma-separated list of symbols to trade'
+        required: true
+        default: 'BTC,ETH'
 
   # Also run on push to main (optional)
   push:
@@ -16,6 +25,7 @@ on:
       - 'configs/**'
       - 'agent/**'
       - 'main.py'
+      - '.github/workflows/hourly-trading.yml'
 
 jobs:
   trading-run:
@@ -52,17 +62,20 @@ jobs:
       - name: Fetch and prepare price data
         run: |
           cd data
-          # Fetch stock prices
-          python get_daily_price.py
-          # Fetch crypto prices for BTC and ETH
-          python get_crypto_prices.py
+          ASSET_TYPE="${{ github.event.inputs.asset_type || 'crypto' }}"
+          SYMBOLS="${{ github.event.inputs.symbols || 'BTC,ETH' }}"
+          if [ "$ASSET_TYPE" == "crypto" ]; then
+            python get_crypto_prices.py --symbols "$SYMBOLS"
+          elif [ "$ASSET_TYPE" == "stock" ]; then
+            python get_daily_price.py --symbols "$SYMBOLS"
+          fi
           python merge_jsonl.py
           cd ..
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Start MCP services with Docker Compose
+      - name: Run services and trading simulation
         run: |
           docker compose -f docker-compose.yml build
           docker compose -f docker-compose.yml up -d
@@ -102,24 +115,17 @@ jobs:
 
           echo "Service startup complete. Current status:"
           docker compose -f docker-compose.yml ps
-        timeout-minutes: 15
 
-      - name: Wait for service ports
-        uses: cathay-pacific/service-ports-health-check@v1
-        with:
-          ports: 8000 8001 8002 8003
-          timeout: 120000
-          delay: 5000
-
-      - name: Run crypto trading simulation
-        run: |
+          echo "Running crypto trading simulation..."
           python main.py configs/crypto_config.json
+
         env:
           AGENT_MAX_STEP: 30
           PYTHONUNBUFFERED: 1
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ALPHAADVANTAGE_API_KEY: ${{ secrets.ALPHAADVANTAGE_API_KEY }}
           JINA_API_KEY: ${{ secrets.JINA_API_KEY }}
+        timeout-minutes: 20
 
       - name: Upload trading results
         if: always()
@@ -163,28 +169,3 @@ jobs:
           echo "**Status:** ${{ job.status }}" >> trading_report.md
           cat trading_report.md
           echo "Trading simulation completed successfully"
-
-  notify-slack:
-    needs: trading-run
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Slack notification
-        if: env.SLACK_WEBHOOK != ''
-        uses: slackapi/slack-github-action@v1
-        with:
-          payload: |
-            {
-              "text": "AI Trading Run ${{ needs.trading-run.result }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "🤖 *AI Trading Run* ${{ needs.trading-run.result == 'success' && '✅' || '❌' }}\n*Run ID:* ${{ github.run_id }}\n*Ref:* ${{ github.ref }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
