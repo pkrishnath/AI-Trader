@@ -2,6 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Install curl
+RUN apt-get update && apt-get install -y curl
+
 # Copy requirements
 COPY requirements.txt .
 
@@ -19,7 +22,7 @@ EXPOSE 8002
 
 # Health check endpoint
 HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=5 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')" || exit 1
+  CMD curl -f http://localhost:8002/health || exit 1
 
 # Run the trade service
 CMD ["python", "agent_tools/tool_trade.py"]
