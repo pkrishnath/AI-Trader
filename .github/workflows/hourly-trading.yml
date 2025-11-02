@@ -107,26 +107,7 @@ jobs:
             fi
           done
 
-          if [ $attempt -eq $max_attempts ]; then
-            echo "⚠️  Timeout waiting for services to be healthy. Checking logs..."
-            docker compose -f docker-compose.yml logs
-            exit 1
-          fi
-
-          echo "Service startup complete. Current status:"
-          docker compose -f docker-compose.yml ps
-
-          echo "Running crypto trading simulation inside trade-service container..."
-          TRADE_CONTAINER_NAME=$(docker compose ps -q trade-service)
-          docker exec \
-            -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
-            -e ALPHAADVANTAGE_API_KEY="${{ secrets.ALPHAADVANTAGE_API_KEY }}" \
-            -e JINA_API_KEY="${{ secrets.JINA_API_KEY }}" \
-            -e AGENT_MAX_STEP="${{ env.AGENT_MAX_STEP }}" \
-            -e PYTHONUNBUFFERED=1 \
-            -e GITHUB_ACTIONS=true \
-            "$TRADE_CONTAINER_NAME" \
-            python main.py configs/crypto_config.json
+          if [ $attempt -eq $max_attempts ]; then\n            echo \"⚠️  Timeout waiting for services to be healthy. Checking logs...\"\n            docker compose -f docker-compose.yml logs\n            exit 1\n          fi\n\n          echo \"Service startup complete. Current status:\"\n          docker compose -f docker-compose.yml ps\n\n          echo \"Waiting for MCP endpoints to be responsive...\"\n          max_mcp_attempts=10\n          mcp_attempt=0\n          while [ $mcp_attempt -lt $max_mcp_attempts ]; do\n            echo \"MCP endpoint check attempt $((mcp_attempt + 1))/$max_mcp_attempts...\"\n            \n            # We need the trade-service container name to exec into it\n            TRADE_CONTAINER_NAME=$(docker compose ps -q trade-service)\n            \n            MATH_MCP_HEALTH=$(docker exec \"$TRADE_CONTAINER_NAME\" curl -s -o /dev/null -w \"%\{http_code\}\" http://math-service:8000/mcp || echo \"000\")\n            PRICES_MCP_HEALTH=$(docker exec \"$TRADE_CONTAINER_NAME\" curl -s -o /dev/null -w \"%\{http_code\}\" http://prices-service:8003/mcp || echo \"000\")\n            SEARCH_MCP_HEALTH=$(docker exec \"$TRADE_CONTAINER_NAME\" curl -s -o /dev/null -w \"%\{http_code\}\" http://search-service:8001/mcp || echo \"000\")\n            TRADE_MCP_HEALTH=$(docker exec \"$TRADE_CONTAINER_NAME\" curl -s -o /dev/null -w \"%\{http_code\}\" http://trade-service:8002/mcp || echo \"000\")\n\n            echo \"Math MCP: $MATH_MCP_HEALTH | Prices MCP: $PRICES_MCP_HEALTH | Search MCP: $SEARCH_MCP_HEALTH | Trade MCP: $TRADE_MCP_HEALTH\"\n\n            if [ \"$MATH_MCP_HEALTH\" == \"200\" ] && [ \"$PRICES_MCP_HEALTH\" == \"200\" ] && [ \"$SEARCH_MCP_HEALTH\" == \"200\" ] && [ \"$TRADE_MCP_HEALTH\" == \"200\" ]; then\n              echo \"✅ All MCP endpoints are responsive!\"\n              break\n            fi\n\n            mcp_attempt=$((mcp_attempt + 1))\n            if [ $mcp_attempt -lt $max_mcp_attempts ]; then\n              echo \"Waiting 5 seconds before next MCP check...\"\n              sleep 5\n            fi\n          done\n\n          if [ $mcp_attempt -eq $max_mcp_attempts ]; then\n            echo \"⚠️  Timeout waiting for MCP endpoints to be responsive. Exiting.\"\n            exit 1\n          fi\n\n          echo \"Running crypto trading simulation inside trade-service container...\"\n          TRADE_CONTAINER_NAME=$(docker compose ps -q trade-service)\n          docker exec \\\n            -e OPENAI_API_KEY=\"${{ secrets.OPENAI_API_KEY }}\" \\\n            -e ALPHAADVANTAGE_API_KEY=\"${{ secrets.ALPHAADVANTAGE_API_KEY }}\" \\\n            -e JINA_API_KEY=\"${{ secrets.JINA_API_KEY }}\" \\\n            -e AGENT_MAX_STEP=\"${{ env.AGENT_MAX_STEP }}\" \\\n            -e PYTHONUNBUFFERED=1 \\\n            -e GITHUB_ACTIONS=true \\\n            \"$TRADE_CONTAINER_NAME\" \\\n            python main.py configs/crypto_config.json
 
         env:
           AGENT_MAX_STEP: 30

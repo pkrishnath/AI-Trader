@@ -51,8 +51,7 @@ services:
     networks:
       - mcp-network
     volumes:
-      - ./data:/app/data
-      - ./configs:/app/configs
+      - .:/app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
       interval: 5s
