@@ -175,6 +175,8 @@ jobs:
             -e ALPHAADVANTAGE_API_KEY="${{ secrets.ALPHAADVANTAGE_API_KEY }}" \
             -e JINA_API_KEY="${{ secrets.JINA_API_KEY }}" \
             -e LLM_MODEL="$LLM_MODEL" \
+            -e ASSET_TYPE="${{ github.event.inputs.asset_type || 'crypto' }}" \
+            -e TRADING_SYMBOLS="${{ github.event.inputs.symbols || 'BTC,ETH' }}" \
             -e AGENT_MAX_STEP="${{ env.AGENT_MAX_STEP }}" \
             -e PYTHONUNBUFFERED=1 \
             -e GITHUB_ACTIONS=true \

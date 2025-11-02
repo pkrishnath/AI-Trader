@@ -178,12 +178,28 @@ async def main(config_path=None):
         # Get log path configuration
         log_path = log_config.get("log_path", "./data/agent_data")
 
-        # Get trading symbols - use trading_universe from config if available, otherwise use default stocks
+        # Determine trading symbols based on priority:
+        # 1. Environment variables (from workflow inputs) - highest priority
+        # 2. Config file (trading_universe) - medium priority
+        # 3. Default NASDAQ 100 stocks - lowest priority
+
         trading_symbols = config.get("trading_universe") or all_nasdaq_100_symbols
-        if trading_symbols == all_nasdaq_100_symbols:
-            print(f"📊 Trading symbols: {len(trading_symbols)} NASDAQ 100 stocks")
+        asset_type = os.getenv("ASSET_TYPE", "").lower()
+        trading_symbols_env = os.getenv("TRADING_SYMBOLS", "").strip()
+
+        if trading_symbols_env:
+            # Environment variable takes precedence - user specified symbols via workflow input
+            trading_symbols = [s.strip().upper() for s in trading_symbols_env.split(",")]
+            print(f"📊 Trading symbols (from workflow input): {trading_symbols}")
+            print(f"💱 Asset type (from workflow input): {asset_type}")
+        elif config.get("trading_universe"):
+            # Config file specifies trading universe
+            trading_symbols = config.get("trading_universe")
+            print(f"📊 Trading symbols (from config): {trading_symbols}")
         else:
-            print(f"📊 Trading symbols: {trading_symbols}")
+            # Default to NASDAQ 100 stocks
+            trading_symbols = all_nasdaq_100_symbols
+            print(f"📊 Trading symbols: {len(trading_symbols)} NASDAQ 100 stocks (default)")
 
         try:
             # Dynamically create Agent instance
