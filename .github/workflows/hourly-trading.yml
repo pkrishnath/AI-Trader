@@ -75,7 +75,7 @@ jobs:
 
       - name: Upload trading results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trading-results-${{ github.run_id }}
           path: data/agent_data/
@@ -83,7 +83,7 @@ jobs:
 
       - name: Upload merged data
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: merged-data-${{ github.run_id }}
           path: data/merged.jsonl
