@@ -17,7 +17,9 @@
       "name": "deepseek-chat-v3.1",
       "basemodel": "deepseek-chat-v3.1",
       "signature": "deepseek-crypto-trader",
-      "enabled": true
+      "enabled": true,
+      "openai_base_url": "https://api.deepseek.com/v1",
+      "openai_api_key": null
     },
     {
       "name": "gpt-4-turbo",
