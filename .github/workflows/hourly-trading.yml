@@ -61,8 +61,8 @@ jobs:
 
       - name: Start MCP services with Docker Compose
         run: |
-          docker compose build
-          docker compose up -d
+          docker compose -f docker-compose.yml build
+          docker compose -f docker-compose.yml up -d
           echo "Waiting for MCP services to be healthy..."
           # Check health of each service
           for port in 8000 8001 8002 8003; do
@@ -73,7 +73,7 @@ jobs:
               fi
               if [ $i -eq 30 ]; then
                 echo "✗ Service on port $port failed to start"
-                docker compose logs
+                docker compose -f docker-compose.yml logs
                 exit 1
               fi
               sleep 2
@@ -121,7 +121,7 @@ jobs:
       - name: Stop Docker containers
         if: always()
         run: |
-          docker compose down
+          docker compose -f docker-compose.yml down
           echo "Docker containers stopped"
 
       - name: Generate trading report
