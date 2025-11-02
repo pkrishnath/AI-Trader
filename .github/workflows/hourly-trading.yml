@@ -108,19 +108,7 @@ jobs:
           echo "**Timestamp:** $(date -u)" >> trading_report.md
           echo "**Status:** ${{ job.status }}" >> trading_report.md
           cat trading_report.md
-
-      - name: Comment on workflow
-        if: success()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.actions.createWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'hourly-trading.yml',
-              ref: context.ref
-            });
-            console.log('Trading run completed successfully');
+          echo "Trading simulation completed successfully"
 
   notify-slack:
     needs: trading-run
