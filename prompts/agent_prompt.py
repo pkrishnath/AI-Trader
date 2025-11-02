@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 import json
 from datetime import datetime, timedelta
@@ -7,24 +8,121 @@ from pathlib import Path
 from typing import Dict, List, Optional
 import sys
 import os
+
 # Add project root directory to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
-from tools.price_tools import get_yesterday_date, get_open_prices, get_yesterday_open_and_close_price, get_today_init_position, get_yesterday_profit
+from tools.price_tools import (
+    get_yesterday_date,
+    get_open_prices,
+    get_yesterday_open_and_close_price,
+    get_today_init_position,
+    get_yesterday_profit,
+)
 from tools.general_tools import get_config_value
 
 all_nasdaq_100_symbols = [
-    "NVDA", "MSFT", "AAPL", "GOOG", "GOOGL", "AMZN", "META", "AVGO", "TSLA",
-    "NFLX", "PLTR", "COST", "ASML", "AMD", "CSCO", "AZN", "TMUS", "MU", "LIN",
-    "PEP", "SHOP", "APP", "INTU", "AMAT", "LRCX", "PDD", "QCOM", "ARM", "INTC",
-    "BKNG", "AMGN", "TXN", "ISRG", "GILD", "KLAC", "PANW", "ADBE", "HON",
-    "CRWD", "CEG", "ADI", "ADP", "DASH", "CMCSA", "VRTX", "MELI", "SBUX",
-    "CDNS", "ORLY", "SNPS", "MSTR", "MDLZ", "ABNB", "MRVL", "CTAS", "TRI",
-    "MAR", "MNST", "CSX", "ADSK", "PYPL", "FTNT", "AEP", "WDAY", "REGN", "ROP",
-    "NXPI", "DDOG", "AXON", "ROST", "IDXX", "EA", "PCAR", "FAST", "EXC", "TTWO",
-    "XEL", "ZS", "PAYX", "WBD", "BKR", "CPRT", "CCEP", "FANG", "TEAM", "CHTR",
-    "KDP", "MCHP", "GEHC", "VRSK", "CTSH", "CSGP", "KHC", "ODFL", "DXCM", "TTD",
-    "ON", "BIIB", "LULU", "CDW", "GFS"
+    "NVDA",
+    "MSFT",
+    "AAPL",
+    "GOOG",
+    "GOOGL",
+    "AMZN",
+    "META",
+    "AVGO",
+    "TSLA",
+    "NFLX",
+    "PLTR",
+    "COST",
+    "ASML",
+    "AMD",
+    "CSCO",
+    "AZN",
+    "TMUS",
+    "MU",
+    "LIN",
+    "PEP",
+    "SHOP",
+    "APP",
+    "INTU",
+    "AMAT",
+    "LRCX",
+    "PDD",
+    "QCOM",
+    "ARM",
+    "INTC",
+    "BKNG",
+    "AMGN",
+    "TXN",
+    "ISRG",
+    "GILD",
+    "KLAC",
+    "PANW",
+    "ADBE",
+    "HON",
+    "CRWD",
+    "CEG",
+    "ADI",
+    "ADP",
+    "DASH",
+    "CMCSA",
+    "VRTX",
+    "MELI",
+    "SBUX",
+    "CDNS",
+    "ORLY",
+    "SNPS",
+    "MSTR",
+    "MDLZ",
+    "ABNB",
+    "MRVL",
+    "CTAS",
+    "TRI",
+    "MAR",
+    "MNST",
+    "CSX",
+    "ADSK",
+    "PYPL",
+    "FTNT",
+    "AEP",
+    "WDAY",
+    "REGN",
+    "ROP",
+    "NXPI",
+    "DDOG",
+    "AXON",
+    "ROST",
+    "IDXX",
+    "EA",
+    "PCAR",
+    "FAST",
+    "EXC",
+    "TTWO",
+    "XEL",
+    "ZS",
+    "PAYX",
+    "WBD",
+    "BKR",
+    "CPRT",
+    "CCEP",
+    "FANG",
+    "TEAM",
+    "CHTR",
+    "KDP",
+    "MCHP",
+    "GEHC",
+    "VRSK",
+    "CTSH",
+    "CSGP",
+    "KHC",
+    "ODFL",
+    "DXCM",
+    "TTD",
+    "ON",
+    "BIIB",
+    "LULU",
+    "CDW",
+    "GFS",
 ]
 
 STOP_SIGNAL = "<FINISH_SIGNAL>"
@@ -65,23 +163,27 @@ When you think your task is complete, output
 {STOP_SIGNAL}
 """
 
+
 def get_agent_system_prompt(today_date: str, signature: str) -> str:
     print(f"signature: {signature}")
     print(f"today_date: {today_date}")
     # Get yesterday's buy and sell prices
-    yesterday_buy_prices, yesterday_sell_prices = get_yesterday_open_and_close_price(today_date, all_nasdaq_100_symbols)
+    yesterday_buy_prices, yesterday_sell_prices = get_yesterday_open_and_close_price(
+        today_date, all_nasdaq_100_symbols
+    )
     today_buy_price = get_open_prices(today_date, all_nasdaq_100_symbols)
     today_init_position = get_today_init_position(today_date, signature)
-    yesterday_profit = get_yesterday_profit(today_date, yesterday_buy_prices, yesterday_sell_prices, today_init_position)
+    yesterday_profit = get_yesterday_profit(
+        today_date, yesterday_buy_prices, yesterday_sell_prices, today_init_position
+    )
     return agent_system_prompt.format(
-        date=today_date, 
-        positions=today_init_position, 
+        date=today_date,
+        positions=today_init_position,
         STOP_SIGNAL=STOP_SIGNAL,
         yesterday_close_price=yesterday_sell_prices,
         today_buy_price=today_buy_price,
-        yesterday_profit=yesterday_profit
+        yesterday_profit=yesterday_profit,
     )
-
 
 
 if __name__ == "__main__":
@@ -89,4 +191,4 @@ if __name__ == "__main__":
     signature = get_config_value("SIGNATURE")
     if signature is None:
         raise ValueError("SIGNATURE environment variable is not set")
-    print(get_agent_system_prompt(today_date, signature))  
+    print(get_agent_system_prompt(today_date, signature))

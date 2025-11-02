@@ -15,10 +15,8 @@ from pathlib import Path
 COINGECKO_API = "https://api.coingecko.com/api/v3"
 
 # Cryptocurrency mapping
-CRYPTO_MAP = {
-    "BTC": "bitcoin",
-    "ETH": "ethereum"
-}
+CRYPTO_MAP = {"BTC": "bitcoin", "ETH": "ethereum"}
+
 
 def get_crypto_historical_data(symbol: str, days: int = 30) -> dict:
     """
@@ -38,11 +36,7 @@ def get_crypto_historical_data(symbol: str, days: int = 30) -> dict:
 
     try:
         url = f"{COINGECKO_API}/coins/{crypto_id}/market_chart"
-        params = {
-            "vs_currency": "usd",
-            "days": days,
-            "interval": "daily"
-        }
+        params = {"vs_currency": "usd", "days": days, "interval": "daily"}
 
         print(f"Fetching {days}-day historical data for {symbol}...")
         response = requests.get(url, params=params, timeout=10)
@@ -71,7 +65,7 @@ def get_crypto_historical_data(symbol: str, days: int = 30) -> dict:
                     "high": price,
                     "low": price,
                     "close": price,
-                    "volume": 0
+                    "volume": 0,
                 }
             else:
                 # Update high/low if needed
@@ -85,6 +79,7 @@ def get_crypto_historical_data(symbol: str, days: int = 30) -> dict:
     except requests.exceptions.RequestException as e:
         print(f"✗ Error fetching data for {symbol}: {e}")
         return {}
+
 
 def get_crypto_current_price(symbol: str) -> float:
     """
@@ -103,10 +98,7 @@ def get_crypto_current_price(symbol: str) -> float:
 
     try:
         url = f"{COINGECKO_API}/simple/price"
-        params = {
-            "ids": crypto_id,
-            "vs_currencies": "usd"
-        }
+        params = {"ids": crypto_id, "vs_currencies": "usd"}
 
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
@@ -120,6 +112,7 @@ def get_crypto_current_price(symbol: str) -> float:
     except requests.exceptions.RequestException as e:
         print(f"✗ Error fetching current price for {symbol}: {e}")
         return 0
+
 
 def save_crypto_data(symbol: str, data: dict, output_dir: str = "data") -> str:
     """
@@ -143,7 +136,10 @@ def save_crypto_data(symbol: str, data: dict, output_dir: str = "data") -> str:
     print(f"✓ Saved {symbol} data to {filename}")
     return filename
 
-def fetch_all_crypto_data(symbols: list = None, days: int = 30, output_dir: str = "data"):
+
+def fetch_all_crypto_data(
+    symbols: list = None, days: int = 30, output_dir: str = "data"
+):
     """
     Fetch and save data for all cryptocurrencies
 
@@ -155,12 +151,12 @@ def fetch_all_crypto_data(symbols: list = None, days: int = 30, output_dir: str 
     if symbols is None:
         symbols = ["BTC", "ETH"]
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("CRYPTOCURRENCY PRICE DATA FETCHER")
-    print("="*60)
+    print("=" * 60)
     print(f"Fetching {days}-day historical data for: {', '.join(symbols)}")
     print(f"Using free CoinGecko API (no authentication required)")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     for symbol in symbols:
         try:
@@ -180,9 +176,10 @@ def fetch_all_crypto_data(symbols: list = None, days: int = 30, output_dir: str 
         except Exception as e:
             print(f"✗ Error processing {symbol}: {e}\n")
 
-    print("="*60)
+    print("=" * 60)
     print("✓ Cryptocurrency data fetch complete!")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
+
 
 if __name__ == "__main__":
     # Fetch 60 days of historical data for BTC and ETH

@@ -11,24 +11,38 @@ class TestPriceTools:
     def test_sample_price_file_exists(self):
         """Test that sample price files exist."""
         data_dir = "data"
-        price_files = [f for f in os.listdir(data_dir) if f.startswith("daily_prices_") and f.endswith(".json")]
+        price_files = [
+            f
+            for f in os.listdir(data_dir)
+            if f.startswith("daily_prices_") and f.endswith(".json")
+        ]
         assert len(price_files) > 0, "No price data files found in data/ directory"
 
     def test_price_file_valid_json(self):
         """Test that price files are valid JSON."""
         data_dir = "data"
-        price_files = [f for f in os.listdir(data_dir) if f.startswith("daily_prices_") and f.endswith(".json")]
+        price_files = [
+            f
+            for f in os.listdir(data_dir)
+            if f.startswith("daily_prices_") and f.endswith(".json")
+        ]
 
         if price_files:
             test_file = os.path.join(data_dir, price_files[0])
             with open(test_file, "r") as f:
                 data = json.load(f)
-            assert isinstance(data, (dict, list)), f"Price data should be JSON object or array"
+            assert isinstance(
+                data, (dict, list)
+            ), f"Price data should be JSON object or array"
 
     def test_price_data_structure(self):
         """Test that price data has expected structure."""
         data_dir = "data"
-        price_files = [f for f in os.listdir(data_dir) if f.startswith("daily_prices_") and f.endswith(".json")]
+        price_files = [
+            f
+            for f in os.listdir(data_dir)
+            if f.startswith("daily_prices_") and f.endswith(".json")
+        ]
 
         if price_files:
             test_file = os.path.join(data_dir, price_files[0])
@@ -40,7 +54,9 @@ class TestPriceTools:
                 first_key = list(data.keys())[0] if data else None
                 if first_key:
                     first_value = data[first_key]
-                    assert isinstance(first_value, dict), "Price data values should be dictionaries"
+                    assert isinstance(
+                        first_value, dict
+                    ), "Price data values should be dictionaries"
 
 
 class TestMergedData:
@@ -65,7 +81,9 @@ class TestMergedData:
                 for line in lines:
                     if line.strip():
                         data = json.loads(line)
-                        assert isinstance(data, dict), "Each JSONL line should be a JSON object"
+                        assert isinstance(
+                            data, dict
+                        ), "Each JSONL line should be a JSON object"
 
 
 class TestAgentData:
@@ -84,7 +102,11 @@ class TestDataIntegrity:
     def test_no_empty_price_files(self):
         """Test that price files are not empty."""
         data_dir = "data"
-        price_files = [f for f in os.listdir(data_dir) if f.startswith("daily_prices_") and f.endswith(".json")]
+        price_files = [
+            f
+            for f in os.listdir(data_dir)
+            if f.startswith("daily_prices_") and f.endswith(".json")
+        ]
 
         for price_file in price_files:
             file_path = os.path.join(data_dir, price_file)

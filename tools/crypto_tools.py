@@ -11,6 +11,7 @@ from typing import Dict, Optional
 # Supported cryptocurrencies
 SUPPORTED_CRYPTOS = ["BTC", "ETH"]
 
+
 def load_crypto_price_data(crypto_symbol: str, data_dir: str = "data") -> Dict:
     """
     Load cryptocurrency price data from JSON file
@@ -39,7 +40,10 @@ def load_crypto_price_data(crypto_symbol: str, data_dir: str = "data") -> Dict:
         print(f"Error loading {crypto_symbol} data: {e}")
         return {}
 
-def get_crypto_price_on_date(crypto_symbol: str, target_date: str, price_type: str = "close") -> Optional[float]:
+
+def get_crypto_price_on_date(
+    crypto_symbol: str, target_date: str, price_type: str = "close"
+) -> Optional[float]:
     """
     Get cryptocurrency price on a specific date
 
@@ -57,6 +61,7 @@ def get_crypto_price_on_date(crypto_symbol: str, target_date: str, price_type: s
         return data[target_date].get(price_type, None)
 
     return None
+
 
 def get_crypto_prices_range(crypto_symbol: str, start_date: str, end_date: str) -> Dict:
     """
@@ -80,6 +85,7 @@ def get_crypto_prices_range(crypto_symbol: str, start_date: str, end_date: str) 
 
     return filtered_data
 
+
 def get_crypto_latest_price(crypto_symbol: str) -> Optional[float]:
     """
     Get the latest available price for a cryptocurrency
@@ -98,6 +104,7 @@ def get_crypto_latest_price(crypto_symbol: str) -> Optional[float]:
     # Get latest date (last entry)
     latest_date = sorted(data.keys())[-1]
     return data[latest_date].get("close", None)
+
 
 def format_crypto_price_data(crypto_symbol: str, target_date: str) -> str:
     """
@@ -122,8 +129,10 @@ def format_crypto_price_data(crypto_symbol: str, target_date: str) -> str:
   Low:   ${prices.get('low', 'N/A'):,.2f}
   Close: ${prices.get('close', 'N/A'):,.2f}"""
 
-def calculate_crypto_returns(crypto_symbol: str, purchase_date: str, purchase_price: float,
-                             sale_date: str) -> Optional[Dict]:
+
+def calculate_crypto_returns(
+    crypto_symbol: str, purchase_date: str, purchase_price: float, sale_date: str
+) -> Optional[Dict]:
     """
     Calculate returns from a crypto trade
 
@@ -151,8 +160,9 @@ def calculate_crypto_returns(crypto_symbol: str, purchase_date: str, purchase_pr
         "sale_date": sale_date,
         "sale_price": sale_price,
         "profit": profit,
-        "return_percentage": return_pct
+        "return_percentage": return_pct,
     }
+
 
 def validate_crypto_data(crypto_symbols: list = None) -> Dict[str, bool]:
     """
@@ -173,6 +183,7 @@ def validate_crypto_data(crypto_symbols: list = None) -> Dict[str, bool]:
         results[symbol] = len(data) > 0
 
     return results
+
 
 def get_crypto_price_summary(crypto_symbols: list = None) -> str:
     """

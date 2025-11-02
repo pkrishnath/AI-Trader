@@ -36,13 +36,19 @@ class TestConfigLoading:
         with open(config_path, "r") as f:
             config = json.load(f)
 
-        assert "initial_cash" in config["agent_config"], "Agent config should have initial_cash"
-        assert config["agent_config"]["initial_cash"] > 0, "Initial cash should be positive"
+        assert (
+            "initial_cash" in config["agent_config"]
+        ), "Agent config should have initial_cash"
+        assert (
+            config["agent_config"]["initial_cash"] > 0
+        ), "Initial cash should be positive"
 
     def test_runtime_env_exists(self):
         """Test that runtime environment file exists."""
         runtime_path = ".runtime_env.json"
-        assert os.path.exists(runtime_path), f"Runtime env file not found at {runtime_path}"
+        assert os.path.exists(
+            runtime_path
+        ), f"Runtime env file not found at {runtime_path}"
 
     def test_runtime_env_valid_json(self):
         """Test that runtime env is valid JSON."""

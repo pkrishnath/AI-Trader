@@ -5,10 +5,12 @@ from typing import Dict, Any
 from fastmcp import FastMCP
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 mcp = FastMCP("LocalPrices")
 from tools.general_tools import get_config_value
+
 
 def _workspace_data_path(filename: str) -> Path:
     base_dir = Path(__file__).resolve().parents[1]
@@ -42,8 +44,16 @@ def get_price_local(symbol: str, date: str) -> Dict[str, Any]:
     data_path = _workspace_data_path(filename)
     if not data_path.exists():
         # Return graceful error instead of crashing
-        print(f"⚠️  Data file not found: {data_path}. Service starting without data.", file=__import__('sys').stderr)
-        return {"error": f"Data file not found: {data_path}", "symbol": symbol, "date": date, "status": "data_loading"}
+        print(
+            f"⚠️  Data file not found: {data_path}. Service starting without data.",
+            file=__import__("sys").stderr,
+        )
+        return {
+            "error": f"Data file not found: {data_path}",
+            "symbol": symbol,
+            "date": date,
+            "status": "data_loading",
+        }
 
     with data_path.open("r", encoding="utf-8") as f:
         for line in f:
@@ -60,7 +70,7 @@ def get_price_local(symbol: str, date: str) -> Dict[str, Any]:
                 return {
                     "error": f"Data not found for date {date}. Please verify the date exists in data. Sample available dates: {sample_dates}",
                     "symbol": symbol,
-                    "date": date
+                    "date": date,
                 }
             return {
                 "symbol": symbol,
@@ -68,13 +78,17 @@ def get_price_local(symbol: str, date: str) -> Dict[str, Any]:
                 "ohlcv": {
                     "open": day.get("1. buy price"),
                     "high": day.get("2. high"),
-                    "low": day.get("3. low"), 
+                    "low": day.get("3. low"),
                     "close": day.get("4. sell price"),
                     "volume": day.get("5. volume"),
                 },
             }
 
-    return {"error": f"No records found for stock {symbol} in local data", "symbol": symbol, "date": date}
+    return {
+        "error": f"No records found for stock {symbol} in local data",
+        "symbol": symbol,
+        "date": date,
+    }
 
 
 if __name__ == "__main__":
@@ -85,6 +99,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ Error starting LocalPrices service: {e}", flush=True)
         import traceback
+
         traceback.print_exc()
         raise
-

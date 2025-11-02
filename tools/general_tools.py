@@ -1,10 +1,11 @@
-
 import os
 import json
 from pathlib import Path
 from typing import Any
 from dotenv import load_dotenv
+
 load_dotenv()
+
 
 def _load_runtime_env() -> dict:
     path = os.environ.get("RUNTIME_ENV_PATH")
@@ -23,15 +24,18 @@ def _load_runtime_env() -> dict:
 
 def get_config_value(key: str, default=None):
     _RUNTIME_ENV = _load_runtime_env()
-    
+
     if key in _RUNTIME_ENV:
         return _RUNTIME_ENV[key]
     return os.getenv(key, default)
 
+
 def write_config_value(key: str, value: Any):
     path = os.environ.get("RUNTIME_ENV_PATH")
     if path is None:
-        print(f"⚠️  WARNING: RUNTIME_ENV_PATH not set, config value '{key}' not persisted")
+        print(
+            f"⚠️  WARNING: RUNTIME_ENV_PATH not set, config value '{key}' not persisted"
+        )
         return
     _RUNTIME_ENV = _load_runtime_env()
     _RUNTIME_ENV[key] = value
@@ -40,6 +44,7 @@ def write_config_value(key: str, value: Any):
             json.dump(_RUNTIME_ENV, f, ensure_ascii=False, indent=4)
     except Exception as e:
         print(f"❌ Error writing config to {path}: {e}")
+
 
 def extract_conversation(conversation: dict, output_type: str):
     """Extract information from a conversation payload.
@@ -95,7 +100,12 @@ def extract_conversation(conversation: dict, output_type: str):
             tool_name = get_field(msg, "name")
             is_tool_message = has_tool_call_id or isinstance(tool_name, str)
 
-            if not is_tool_invoke and not is_tool_message and isinstance(content, str) and content.strip():
+            if (
+                not is_tool_invoke
+                and not is_tool_message
+                and isinstance(content, str)
+                and content.strip()
+            ):
                 return content
 
         return None
@@ -131,7 +141,9 @@ def extract_tool_messages(conversation: dict):
     for msg in messages:
         tool_call_id = get_field(msg, "tool_call_id")
         name = get_field(msg, "name")
-        finish_reason = get_nested(msg, ["response_metadata", "finish_reason"])  # present for AIMessage
+        finish_reason = get_nested(
+            msg, ["response_metadata", "finish_reason"]
+        )  # present for AIMessage
         # Treat as ToolMessage if it carries a tool_call_id, or looks like a tool response
         if tool_call_id or (isinstance(name, str) and not finish_reason):
             tool_messages.append(msg)
@@ -148,4 +160,3 @@ def extract_first_tool_message_content(conversation: dict):
     if isinstance(first, dict):
         return first.get("content")
     return getattr(first, "content", None)
-

@@ -5,6 +5,7 @@ Supports: Bitcoin (BTC) and Ethereum (ETH)
 
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import sys
@@ -21,7 +22,7 @@ from tools.crypto_tools import (
     get_crypto_price_on_date,
     format_crypto_price_data,
     get_crypto_latest_price,
-    SUPPORTED_CRYPTOS
+    SUPPORTED_CRYPTOS,
 )
 from tools.general_tools import get_config_value
 
@@ -71,6 +72,7 @@ When you think your task is complete, output:
 {STOP_SIGNAL}
 """
 
+
 def get_crypto_positions_string(positions: dict) -> str:
     """
     Format crypto positions for agent prompt
@@ -86,6 +88,7 @@ def get_crypto_positions_string(positions: dict) -> str:
     cash = positions.get("CASH", 0)
 
     return f"BTC: {btc:.6f}, ETH: {eth:.6f}, CASH: ${cash:,.2f}"
+
 
 def get_crypto_prices_string(target_date: str) -> str:
     """
@@ -104,6 +107,7 @@ def get_crypto_prices_string(target_date: str) -> str:
 
     return prices_str
 
+
 def get_crypto_agent_system_prompt(today_date: str, signature: str) -> str:
     """
     Generate system prompt for crypto trading agent
@@ -119,6 +123,7 @@ def get_crypto_agent_system_prompt(today_date: str, signature: str) -> str:
 
     # Get yesterday's date
     from datetime import datetime, timedelta
+
     today = datetime.strptime(today_date, "%Y-%m-%d")
     yesterday = today - timedelta(days=1)
     yesterday_date = yesterday.strftime("%Y-%m-%d")
@@ -129,11 +134,7 @@ def get_crypto_agent_system_prompt(today_date: str, signature: str) -> str:
 
     # For now, initialize with sample positions
     # In real implementation, would load from trading history
-    current_positions = {
-        "BTC": 0.5,
-        "ETH": 2.0,
-        "CASH": 8000.0
-    }
+    current_positions = {"BTC": 0.5, "ETH": 2.0, "CASH": 8000.0}
     positions_str = get_crypto_positions_string(current_positions)
 
     return crypto_system_prompt.format(
@@ -141,8 +142,9 @@ def get_crypto_agent_system_prompt(today_date: str, signature: str) -> str:
         positions=positions_str,
         STOP_SIGNAL=STOP_SIGNAL,
         yesterday_close_price=yesterday_prices,
-        today_open_price=today_prices
+        today_open_price=today_prices,
     )
+
 
 def validate_crypto_data(target_date: str) -> bool:
     """
@@ -162,15 +164,16 @@ def validate_crypto_data(target_date: str) -> bool:
 
     return True
 
+
 if __name__ == "__main__":
     # Test the crypto prompt generation
     today_date = "2025-10-15"
     signature = "gpt-5"
 
     if validate_crypto_data(today_date):
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("CRYPTO AGENT SYSTEM PROMPT")
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")
         prompt = get_crypto_agent_system_prompt(today_date, signature)
         print(prompt)
     else:
