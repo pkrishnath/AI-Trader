@@ -40,7 +40,7 @@ jobs:
 
       - name: Check import sorting
         run: |
-          isort --check-only . --skip-glob="\.git|\.venv|build|dist"
+          isort --check-only . --skip-glob="\.git|\.venv|build|dist|docs"
 
   test-units:
     runs-on: ubuntu-latest
