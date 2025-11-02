@@ -72,6 +72,9 @@ jobs:
         env:
           AGENT_MAX_STEP: 30
           PYTHONUNBUFFERED: 1
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ALPHAADVANTAGE_API_KEY: ${{ secrets.ALPHAADVANTAGE_API_KEY }}
+          JINA_API_KEY: ${{ secrets.JINA_API_KEY }}
 
       - name: Upload trading results
         if: always()
