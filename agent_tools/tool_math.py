@@ -2,10 +2,21 @@ import os
 
 from dotenv import load_dotenv
 from fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
 
 load_dotenv()
 
 mcp = FastMCP("Math")
+
+
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request: Request) -> PlainTextResponse:
+    """
+    Health check endpoint.
+    Returns: A simple plain text response indicating server health.
+    """
+    return PlainTextResponse("OK")
 
 
 @mcp.tool()
