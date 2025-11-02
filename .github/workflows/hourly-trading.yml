@@ -116,8 +116,17 @@ jobs:
           echo "Service startup complete. Current status:"
           docker compose -f docker-compose.yml ps
 
-          echo "Running crypto trading simulation..."
-          python main.py configs/crypto_config.json
+          echo "Running crypto trading simulation inside trade-service container..."
+          TRADE_CONTAINER_NAME=$(docker compose ps -q trade-service)
+          docker exec \
+            -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+            -e ALPHAADVANTAGE_API_KEY="${{ secrets.ALPHAADVANTAGE_API_KEY }}" \
+            -e JINA_API_KEY="${{ secrets.JINA_API_KEY }}" \
+            -e AGENT_MAX_STEP="${{ env.AGENT_MAX_STEP }}" \
+            -e PYTHONUNBUFFERED=1 \
+            -e GITHUB_ACTIONS=true \
+            "$TRADE_CONTAINER_NAME" \
+            python main.py configs/crypto_config.json
 
         env:
           AGENT_MAX_STEP: 30
