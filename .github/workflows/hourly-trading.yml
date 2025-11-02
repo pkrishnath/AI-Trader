@@ -117,7 +117,7 @@ jobs:
           docker compose -f docker-compose.yml ps
 
           echo "Waiting for MCP endpoints to be responsive..."
-          max_mcp_attempts=10
+          max_mcp_attempts=20
           mcp_attempt=0
           while [ $mcp_attempt -lt $max_mcp_attempts ]; do
             echo "MCP endpoint check attempt $((mcp_attempt + 1))/$max_mcp_attempts..."
@@ -125,10 +125,10 @@ jobs:
             # We need the trade-service container name to exec into it
             TRADE_CONTAINER_NAME=$(docker compose ps -q trade-service)
             
-            MATH_MCP_HEALTH=$(docker exec "$TRADE_CONTAINER_NAME" curl -s -o /dev/null -w "%""{http_code}""" http://math-service:8000/mcp || echo "000")
-            PRICES_MCP_HEALTH=$(docker exec "$TRADE_CONTAINER_NAME" curl -s -o /dev/null -w "%""{http_code}""" http://prices-service:8003/mcp || echo "000")
-            SEARCH_MCP_HEALTH=$(docker exec "$TRADE_CONTAINER_NAME" curl -s -o /dev/null -w "%""{http_code}""" http://search-service:8001/mcp || echo "000")
-            TRADE_MCP_HEALTH=$(docker exec "$TRADE_CONTAINER_NAME" curl -s -o /dev/null -w "%""{http_code}""" http://trade-service:8002/mcp || echo "000")
+            MATH_MCP_HEALTH=$(docker exec "$TRADE_CONTAINER_NAME" curl -w '%{http_code}' http://math-service:8000/mcp || echo "000")
+            PRICES_MCP_HEALTH=$(docker exec "$TRADE_CONTAINER_NAME" curl -w '%{http_code}' http://prices-service:8003/mcp || echo "000")
+            SEARCH_MCP_HEALTH=$(docker exec "$TRADE_CONTAINER_NAME" curl -w '%{http_code}' http://search-service:8001/mcp || echo "000")
+            TRADE_MCP_HEALTH=$(docker exec "$TRADE_CONTAINER_NAME" curl -w '%{http_code}' http://trade-service:8002/mcp || echo "000")
 
             echo "Math MCP: $MATH_MCP_HEALTH | Prices MCP: $PRICES_MCP_HEALTH | Search MCP: $SEARCH_MCP_HEALTH | Trade MCP: $TRADE_MCP_HEALTH"
 
