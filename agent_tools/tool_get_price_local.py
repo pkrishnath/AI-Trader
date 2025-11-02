@@ -14,6 +14,7 @@ mcp = FastMCP("LocalPrices")
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
+
 @mcp.custom_route("/health", methods=["GET"])
 async def health_check(request: Request) -> PlainTextResponse:
     """
@@ -21,6 +22,8 @@ async def health_check(request: Request) -> PlainTextResponse:
     Returns: A simple plain text response indicating server health.
     """
     return PlainTextResponse("OK")
+
+
 from tools.general_tools import get_config_value
 
 
