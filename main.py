@@ -178,12 +178,19 @@ async def main(config_path=None):
         # Get log path configuration
         log_path = log_config.get("log_path", "./data/agent_data")
 
+        # Get trading symbols - use trading_universe from config if available, otherwise use default stocks
+        trading_symbols = config.get("trading_universe") or all_nasdaq_100_symbols
+        if trading_symbols == all_nasdaq_100_symbols:
+            print(f"📊 Trading symbols: {len(trading_symbols)} NASDAQ 100 stocks")
+        else:
+            print(f"📊 Trading symbols: {trading_symbols}")
+
         try:
             # Dynamically create Agent instance
             agent = AgentClass(
                 signature=signature,
                 basemodel=basemodel,
-                stock_symbols=all_nasdaq_100_symbols,
+                stock_symbols=trading_symbols,
                 log_path=log_path,
                 openai_base_url=openai_base_url,
                 openai_api_key=openai_api_key,
