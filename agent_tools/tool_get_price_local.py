@@ -110,7 +110,7 @@ if __name__ == "__main__":
     try:
         port = int(os.getenv("GETPRICE_HTTP_PORT", "8003"))
         print(f"🚀 LocalPrices service starting on port {port}...", flush=True)
-        mcp.run(transport="streamable-http", port=port)
+        mcp.run(transport="streamable-http", host="0.0.0.0", port=port)
     except Exception as e:
         print(f"❌ Error starting LocalPrices service: {e}", flush=True)
         import traceback

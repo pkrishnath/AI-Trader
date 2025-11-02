@@ -11,6 +11,12 @@
       "name": "gpt-4o",
       "basemodel": "gpt-4o",
       "signature": "gpt-4o-crypto-trader",
+      "enabled": false
+    },
+    {
+      "name": "deepseek-chat",
+      "basemodel": "deepseek-chat",
+      "signature": "deepseek-crypto-trader",
       "enabled": true
     },
     {

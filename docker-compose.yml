@@ -80,6 +80,33 @@ services:
       retries: 5
       start_period: 5s
 
+  agent-runner:
+    container_name: agent-runner-container
+    build:
+      context: .
+      dockerfile: Dockerfile.agent-runner
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ALPHAADVANTAGE_API_KEY=${ALPHAADVANTAGE_API_KEY}
+      - JINA_API_KEY=${JINA_API_KEY}
+      - AGENT_MAX_STEP=${AGENT_MAX_STEP}
+      - PYTHONUNBUFFERED=1
+      - GITHUB_ACTIONS=true
+    networks:
+      - mcp-network
+    depends_on:
+      math-service:
+        condition: service_healthy
+      search-service:
+        condition: service_healthy
+      trade-service:
+        condition: service_healthy
+      prices-service:
+        condition: service_healthy
+
 networks:
   mcp-network:
     driver: bridge

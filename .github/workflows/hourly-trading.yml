@@ -117,41 +117,8 @@ jobs:
           echo "Service startup complete. Current status:"
           docker compose -f docker-compose.yml ps
 
-          echo "Waiting for MCP endpoints to be responsive..."
-          max_mcp_attempts=20
-          mcp_attempt=0
-          while [ $mcp_attempt -lt $max_mcp_attempts ]; do
-            echo "MCP endpoint check attempt $((mcp_attempt + 1))/$max_mcp_attempts..."
-            
-            # We need the trade-service container name to exec into it
-            TRADE_CONTAINER_NAME=$(docker compose ps -q trade-service)
-            
-            MATH_PORT_OPEN=$(docker exec "$TRADE_CONTAINER_NAME" nc -z math-service 8000 && echo "open" || echo "closed")
-            PRICES_PORT_OPEN=$(docker exec "$TRADE_CONTAINER_NAME" nc -z prices-service 8003 && echo "open" || echo "closed")
-            SEARCH_PORT_OPEN=$(docker exec "$TRADE_CONTAINER_NAME" nc -z search-service 8001 && echo "open" || echo "closed")
-            TRADE_PORT_OPEN=$(docker exec "$TRADE_CONTAINER_NAME" nc -z trade-service 8002 && echo "open" || echo "closed")
-
-            echo "Math Port: $MATH_PORT_OPEN | Prices Port: $PRICES_PORT_OPEN | Search Port: $SEARCH_PORT_OPEN | Trade Port: $TRADE_PORT_OPEN"
-
-            if [ "$MATH_PORT_OPEN" == "open" ] && [ "$PRICES_PORT_OPEN" == "open" ] && [ "$SEARCH_PORT_OPEN" == "open" ] && [ "$TRADE_PORT_OPEN" == "open" ]; then
-              echo "✅ All MCP ports are open!"
-              break
-            fi
-
-            mcp_attempt=$((mcp_attempt + 1))
-            if [ $mcp_attempt -lt $max_mcp_attempts ]; then
-              echo "Waiting 5 seconds before next MCP check..."
-              sleep 5
-            fi
-          done
-
-          if [ $mcp_attempt -eq $max_mcp_attempts ]; then
-            echo "⚠️  Timeout waiting for MCP endpoints to be responsive. Exiting."
-            exit 1
-          fi
-
-          echo "Running crypto trading simulation inside trade-service container..."
-          TRADE_CONTAINER_NAME=$(docker compose ps -q trade-service)
+          echo "Running crypto trading simulation inside agent-runner container..."
+          AGENT_RUNNER_CONTAINER_NAME="agent-runner-container"
           docker exec \
             -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
             -e ALPHAADVANTAGE_API_KEY="${{ secrets.ALPHAADVANTAGE_API_KEY }}" \
@@ -159,7 +126,7 @@ jobs:
             -e AGENT_MAX_STEP="${{ env.AGENT_MAX_STEP }}" \
             -e PYTHONUNBUFFERED=1 \
             -e GITHUB_ACTIONS=true \
-            "$TRADE_CONTAINER_NAME" \
+            "$AGENT_RUNNER_CONTAINER_NAME" \
             python main.py configs/crypto_config.json
 
         env:
