@@ -89,6 +89,18 @@ jobs:
           path: data/merged.jsonl
           retention-days: 30
 
+      - name: Copy trading data to docs
+        if: always()
+        run: |
+          mkdir -p docs/data
+          if [ -f "data/merged.jsonl" ]; then
+            cp data/merged.jsonl docs/data/
+          fi
+          if [ -d "data/agent_data" ]; then
+            cp -r data/agent_data/* docs/data/ || true
+          fi
+          echo "Trading data copied to docs for dashboard"
+
       - name: Generate trading report
         if: always()
         run: |
