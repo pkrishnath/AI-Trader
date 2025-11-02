@@ -8,21 +8,21 @@
   },
   "models": [
     {
-      "name": "claude-3.5-sonnet",
-      "basemodel": "anthropic/claude-3.5-sonnet",
-      "signature": "claude-crypto-trader",
+      "name": "gpt-4o",
+      "basemodel": "gpt-4o",
+      "signature": "gpt-4o-crypto-trader",
       "enabled": true
     },
     {
-      "name": "deepseek-chat-v3.1",
-      "basemodel": "deepseek/deepseek-chat-v3.1",
-      "signature": "deepseek-chat-v3.1",
+      "name": "gpt-4-turbo",
+      "basemodel": "gpt-4-turbo",
+      "signature": "gpt-4-turbo-crypto",
       "enabled": false
     },
     {
-      "name": "gpt-5",
-      "basemodel": "openai/gpt-5",
-      "signature": "gpt-5",
+      "name": "claude-3.5-sonnet",
+      "basemodel": "anthropic/claude-3.5-sonnet",
+      "signature": "claude-crypto-trader",
       "enabled": false
     }
   ],
