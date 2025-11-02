@@ -10,7 +10,7 @@
     {
       "comment": "Groq - FREE, super fast (300+ tokens/sec), no credit card required",
       "name": "groq-llama3.3",
-      "basemodel": "groq/llama-3.3-70b-versatile",
+      "basemodel": "llama-3.3-70b-versatile",
       "signature": "groq-crypto-trader",
       "enabled": true,
       "openai_base_url": "https://api.groq.com/openai/v1",

@@ -199,16 +199,22 @@ class BaseAgent:
         # Set log path
         self.base_log_path = log_path or "./data/agent_data"
 
-        # Set API configuration based on model type
+        # Determine provider from basemodel or openai_base_url
+        is_deepseek = "deepseek" in basemodel.lower()
+        is_groq = "groq" in basemodel.lower() or (openai_base_url and "groq" in openai_base_url.lower())
+        is_gpt = "gpt" in basemodel.lower() or "4o" in basemodel.lower()
+        is_claude = "claude" in basemodel.lower()
+
+        # Set API configuration based on provider
         if openai_api_key == None:
-            # Use provider-specific API key based on model
-            if "deepseek" in basemodel.lower():
+            # Use provider-specific API key based on detected provider
+            if is_deepseek:
                 self.openai_api_key = os.getenv("DEEPSEEK_API_KEY") or os.getenv("OPENAI_API_KEY")
                 print(f"🔑 Using DeepSeek API key")
-            elif "groq" in basemodel.lower():
+            elif is_groq:
                 self.openai_api_key = os.getenv("GROQ_API_KEY") or os.getenv("OPENAI_API_KEY")
                 print(f"🔑 Using Groq API key")
-            elif "gpt" in basemodel.lower() or "4o" in basemodel.lower():
+            elif is_gpt:
                 self.openai_api_key = os.getenv("OPENAI_API_KEY")
                 print(f"🔑 Using OpenAI API key")
             else:
@@ -218,11 +224,11 @@ class BaseAgent:
 
         if openai_base_url == None:
             # Use provider-specific API base URL based on model
-            if "deepseek" in basemodel.lower():
+            if is_deepseek:
                 self.openai_base_url = os.getenv("DEEPSEEK_API_BASE") or "https://api.deepseek.com/v1"
-            elif "groq" in basemodel.lower():
+            elif is_groq:
                 self.openai_base_url = os.getenv("GROQ_API_BASE") or "https://api.groq.com/openai/v1"
-            elif "gpt" in basemodel.lower() or "4o" in basemodel.lower():
+            elif is_gpt:
                 self.openai_base_url = os.getenv("OPENAI_API_BASE") or "https://api.openai.com/v1"
             else:
                 self.openai_base_url = os.getenv("OPENAI_API_BASE")
