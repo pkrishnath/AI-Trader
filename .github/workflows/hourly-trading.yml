@@ -75,18 +75,14 @@ jobs:
             echo "Health check attempt $((attempt + 1))/$max_attempts..."
 
             # Get health status of all services
-            math_status=$(docker compose -f docker-compose.yml ps math-service --format json | grep -o '"State":"[^"]*' | cut -d'"' -f4)
-            search_status=$(docker compose -f docker-compose.yml ps search-service --format json | grep -o '"State":"[^"]*' | cut -d'"' -f4)
-            trade_status=$(docker compose -f docker-compose.yml ps trade-service --format json | grep -o '"State":"[^"]*' | cut -d'"' -f4)
-            prices_status=$(docker compose -f docker-compose.yml ps prices-service --format json | grep -o '"State":"[^"]*' | cut -d'"' -f4)
+            math_health=$(docker compose -f docker-compose.yml ps math-service --format json | jq -r '.[0].Health')
+            search_health=$(docker compose -f docker-compose.yml ps search-service --format json | jq -r '.[0].Health')
+            trade_health=$(docker compose -f docker-compose.yml ps trade-service --format json | jq -r '.[0].Health')
+            prices_health=$(docker compose -f docker-compose.yml ps prices-service --format json | jq -r '.[0].Health')
 
-            echo "Math: $math_status | Search: $search_status | Trade: $trade_status | Prices: $prices_status"
+            echo "Math: $math_health | Search: $search_health | Trade: $trade_health | Prices: $prices_health"
 
-            # Also try direct curl to each service
-            if curl -f http://localhost:8000/health 2>/dev/null && \
-               curl -f http://localhost:8001/health 2>/dev/null && \
-               curl -f http://localhost:8002/health 2>/dev/null && \
-               curl -f http://localhost:8003/health 2>/dev/null; then
+            if [ "$math_health" = "healthy" ] && [ "$search_health" = "healthy" ] && [ "$trade_health" = "healthy" ] && [ "$prices_health" = "healthy" ]; then
               echo "✅ All services are healthy and responding!"
               break
             fi
