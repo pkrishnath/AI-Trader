@@ -111,13 +111,18 @@ current_dir = os.path.dirname(__file__)
 pattern = os.path.join(current_dir, "daily_price*.json")
 files = sorted(glob.glob(pattern))
 
+# Also include crypto price files (BTC, ETH)
+crypto_pattern = os.path.join(current_dir, "crypto_prices*.json")
+crypto_files = sorted(glob.glob(crypto_pattern))
+files.extend(crypto_files)
+
 output_file = os.path.join(current_dir, "merged.jsonl")
 
 with open(output_file, "w", encoding="utf-8") as fout:
     for fp in files:
         basename = os.path.basename(fp)
-        # 仅当文件名包含任一纳指100成分符号时才写入
-        if not any(symbol in basename for symbol in all_nasdaq_100_symbols):
+        # Skip files that don't match NASDAQ 100 symbols, but allow crypto files
+        if not (any(symbol in basename for symbol in all_nasdaq_100_symbols) or "crypto_prices" in basename):
             continue
         with open(fp, "r", encoding="utf-8") as f:
             data = json.load(f)
