@@ -66,11 +66,47 @@ jobs:
         run: |
           docker compose -f docker-compose.yml build
           docker compose -f docker-compose.yml up -d
-          echo "MCP services launched. Waiting for startup (30 seconds)..."
-          sleep 30
-          echo "MCP services should be ready. Starting trading simulation..."
+          echo "MCP services launched. Waiting for all services to be healthy..."
+
+          # Wait for all services to be healthy (max 120 seconds)
+          max_attempts=24
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            echo "Health check attempt $((attempt + 1))/$max_attempts..."
+
+            # Get health status of all services
+            math_status=$(docker compose -f docker-compose.yml ps math-service --format json | grep -o '"State":"[^"]*' | cut -d'"' -f4)
+            search_status=$(docker compose -f docker-compose.yml ps search-service --format json | grep -o '"State":"[^"]*' | cut -d'"' -f4)
+            trade_status=$(docker compose -f docker-compose.yml ps trade-service --format json | grep -o '"State":"[^"]*' | cut -d'"' -f4)
+            prices_status=$(docker compose -f docker-compose.yml ps prices-service --format json | grep -o '"State":"[^"]*' | cut -d'"' -f4)
+
+            echo "Math: $math_status | Search: $search_status | Trade: $trade_status | Prices: $prices_status"
+
+            # Also try direct curl to each service
+            if curl -f http://localhost:8000/health 2>/dev/null && \
+               curl -f http://localhost:8001/health 2>/dev/null && \
+               curl -f http://localhost:8002/health 2>/dev/null && \
+               curl -f http://localhost:8003/health 2>/dev/null; then
+              echo "✅ All services are healthy and responding!"
+              break
+            fi
+
+            attempt=$((attempt + 1))
+            if [ $attempt -lt $max_attempts ]; then
+              echo "Waiting 5 seconds before next check..."
+              sleep 5
+            fi
+          done
+
+          if [ $attempt -eq $max_attempts ]; then
+            echo "⚠️  Timeout waiting for services to be healthy. Checking logs..."
+            docker compose -f docker-compose.yml logs
+            exit 1
+          fi
+
+          echo "Service startup complete. Current status:"
           docker compose -f docker-compose.yml ps
-        timeout-minutes: 10
+        timeout-minutes: 15
 
       - name: Run crypto trading simulation
         run: |

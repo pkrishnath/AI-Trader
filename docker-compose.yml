@@ -10,6 +10,7 @@ services:
       - "8000:8000"
     environment:
       - MATH_HTTP_PORT=8000
+      - PYTHONPATH=/app
     networks:
       - mcp-network
     healthcheck:
