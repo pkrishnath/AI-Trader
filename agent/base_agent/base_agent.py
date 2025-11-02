@@ -199,15 +199,30 @@ class BaseAgent:
         # Set log path
         self.base_log_path = log_path or "./data/agent_data"
 
-        # Set OpenAI configuration
-        if openai_base_url == None:
-            self.openai_base_url = os.getenv("OPENAI_API_BASE")
-        else:
-            self.openai_base_url = openai_base_url
+        # Set API configuration based on model type
         if openai_api_key == None:
-            self.openai_api_key = os.getenv("OPENAI_API_KEY")
+            # Use provider-specific API key based on model
+            if "deepseek" in basemodel.lower():
+                self.openai_api_key = os.getenv("DEEPSEEK_API_KEY") or os.getenv("OPENAI_API_KEY")
+                print(f"🔑 Using DeepSeek API key")
+            elif "gpt" in basemodel.lower() or "4o" in basemodel.lower():
+                self.openai_api_key = os.getenv("OPENAI_API_KEY")
+                print(f"🔑 Using OpenAI API key")
+            else:
+                self.openai_api_key = os.getenv("OPENAI_API_KEY")
         else:
             self.openai_api_key = openai_api_key
+
+        if openai_base_url == None:
+            # Use provider-specific API base URL based on model
+            if "deepseek" in basemodel.lower():
+                self.openai_base_url = os.getenv("DEEPSEEK_API_BASE") or "https://api.deepseek.com/v1"
+            elif "gpt" in basemodel.lower() or "4o" in basemodel.lower():
+                self.openai_base_url = os.getenv("OPENAI_API_BASE") or "https://api.openai.com/v1"
+            else:
+                self.openai_base_url = os.getenv("OPENAI_API_BASE")
+        else:
+            self.openai_base_url = openai_base_url
 
         # Initialize components
         self.client: Optional[MultiServerMCPClient] = None

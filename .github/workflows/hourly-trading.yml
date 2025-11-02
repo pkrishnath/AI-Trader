@@ -60,9 +60,17 @@ jobs:
       - name: Set up environment
         run: |
           cp .env.example .env
+          # LLM Provider API Keys
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+          echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> .env
+          echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" >> .env
+          # Third-party APIs
           echo "ALPHAADVANTAGE_API_KEY=${{ secrets.ALPHAADVANTAGE_API_KEY }}" >> .env
           echo "JINA_API_KEY=${{ secrets.JINA_API_KEY }}" >> .env
+          # API Base URLs
+          echo "OPENAI_API_BASE=https://api.openai.com/v1" >> .env
+          echo "DEEPSEEK_API_BASE=https://api.deepseek.com/v1" >> .env
+          # MCP Ports
           echo "MATH_HTTP_PORT=8000" >> .env
           echo "SEARCH_HTTP_PORT=8001" >> .env
           echo "TRADE_HTTP_PORT=8002" >> .env
@@ -73,26 +81,6 @@ jobs:
         run: |
           LLM_MODEL="${{ github.event.inputs.llm_model || 'deepseek' }}"
           echo "📝 Selected LLM Model: $LLM_MODEL"
-
-          case "$LLM_MODEL" in
-            deepseek)
-              echo "OPENAI_API_BASE=https://api.deepseek.com/v1" >> .env
-              echo "✅ DeepSeek API endpoint configured"
-              ;;
-            gpt-4o|gpt-4-turbo)
-              echo "OPENAI_API_BASE=https://api.openai.com/v1" >> .env
-              echo "✅ OpenAI API endpoint configured"
-              ;;
-            claude-3.5-sonnet)
-              echo "ANTHROPIC_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
-              echo "✅ Claude API configured (using OPENAI_API_KEY secret)"
-              ;;
-            *)
-              echo "Unknown model: $LLM_MODEL, defaulting to DeepSeek"
-              echo "OPENAI_API_BASE=https://api.deepseek.com/v1" >> .env
-              ;;
-          esac
-
           echo "🤖 LLM_MODEL=$LLM_MODEL" >> $GITHUB_ENV
 
       - name: Fetch and prepare price data
@@ -157,12 +145,12 @@ jobs:
           AGENT_RUNNER_CONTAINER_NAME="agent-runner-container"
           LLM_MODEL="${{ github.event.inputs.llm_model || 'deepseek' }}"
 
-          # Read OPENAI_API_BASE from .env
-          OPENAI_API_BASE=$(grep "^OPENAI_API_BASE" .env | cut -d'=' -f2-)
-
           docker exec \
             -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
-            -e OPENAI_API_BASE="$OPENAI_API_BASE" \
+            -e DEEPSEEK_API_KEY="${{ secrets.DEEPSEEK_API_KEY }}" \
+            -e ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
+            -e OPENAI_API_BASE="https://api.openai.com/v1" \
+            -e DEEPSEEK_API_BASE="https://api.deepseek.com/v1" \
             -e ALPHAADVANTAGE_API_KEY="${{ secrets.ALPHAADVANTAGE_API_KEY }}" \
             -e JINA_API_KEY="${{ secrets.JINA_API_KEY }}" \
             -e LLM_MODEL="$LLM_MODEL" \
@@ -176,6 +164,8 @@ jobs:
           AGENT_MAX_STEP: 30
           PYTHONUNBUFFERED: 1
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ALPHAADVANTAGE_API_KEY: ${{ secrets.ALPHAADVANTAGE_API_KEY }}
           JINA_API_KEY: ${{ secrets.JINA_API_KEY }}
         timeout-minutes: 20
