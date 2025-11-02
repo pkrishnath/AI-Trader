@@ -224,19 +224,19 @@ class BaseAgent:
         return {
             "math": {
                 "transport": "streamable_http",
-                "url": f"http://localhost:{os.getenv('MATH_HTTP_PORT', '8000')}/mcp",
+                "url": f"http://host.docker.internal:{os.getenv('MATH_HTTP_PORT', '8000')}/mcp",
             },
             "stock_local": {
                 "transport": "streamable_http",
-                "url": f"http://localhost:{os.getenv('GETPRICE_HTTP_PORT', '8003')}/mcp",
+                "url": f"http://host.docker.internal:{os.getenv('GETPRICE_HTTP_PORT', '8003')}/mcp",
             },
             "search": {
                 "transport": "streamable_http",
-                "url": f"http://localhost:{os.getenv('SEARCH_HTTP_PORT', '8001')}/mcp",
+                "url": f"http://host.docker.internal:{os.getenv('SEARCH_HTTP_PORT', '8001')}/mcp",
             },
             "trade": {
                 "transport": "streamable_http",
-                "url": f"http://localhost:{os.getenv('TRADE_HTTP_PORT', '8002')}/mcp",
+                "url": f"http://host.docker.internal:{os.getenv('TRADE_HTTP_PORT', '8002')}/mcp",
             },
         }
 
