@@ -146,7 +146,23 @@ jobs:
 
           echo "Running crypto trading simulation inside agent-runner container..."
           AGENT_RUNNER_CONTAINER_NAME="agent-runner-container"
-          LLM_MODEL="${{ github.event.inputs.llm_model || 'deepseek' }}"
+          LLM_MODEL="${{ github.event.inputs.llm_model || 'groq' }}"
+
+          # Select config file based on LLM model
+          case "$LLM_MODEL" in
+            groq)
+              CONFIG_FILE="configs/groq_config.json"
+              echo "📝 Using Groq config: $CONFIG_FILE"
+              ;;
+            deepseek)
+              CONFIG_FILE="configs/crypto_config.json"
+              echo "📝 Using DeepSeek config: $CONFIG_FILE"
+              ;;
+            *)
+              CONFIG_FILE="configs/crypto_config.json"
+              echo "📝 Using default crypto config: $CONFIG_FILE"
+              ;;
+          esac
 
           docker exec \
             -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
@@ -163,7 +179,7 @@ jobs:
             -e PYTHONUNBUFFERED=1 \
             -e GITHUB_ACTIONS=true \
             "$AGENT_RUNNER_CONTAINER_NAME" \
-            python main.py configs/crypto_config.json
+            python main.py "$CONFIG_FILE"
 
         env:
           AGENT_MAX_STEP: 30
