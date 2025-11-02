@@ -278,7 +278,9 @@ class BaseAgent:
                 # Use ChatAnthropic for Claude models
                 print(f"🤖 Using Claude model: {self.basemodel}")
                 self.model = ChatAnthropic(
-                    model=self.basemodel.split("/")[-1],  # Extract model name (e.g., claude-3.5-sonnet)
+                    model=self.basemodel.split("/")[
+                        -1
+                    ],  # Extract model name (e.g., claude-3.5-sonnet)
                     api_key=self.openai_api_key,  # Use OPENAI_API_KEY env var which should contain Claude key
                     max_retries=3,
                     timeout=30,

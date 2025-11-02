@@ -122,7 +122,10 @@ with open(output_file, "w", encoding="utf-8") as fout:
     for fp in files:
         basename = os.path.basename(fp)
         # Skip files that don't match NASDAQ 100 symbols, but allow crypto files
-        if not (any(symbol in basename for symbol in all_nasdaq_100_symbols) or "crypto_prices" in basename):
+        if not (
+            any(symbol in basename for symbol in all_nasdaq_100_symbols)
+            or "crypto_prices" in basename
+        ):
             continue
         with open(fp, "r", encoding="utf-8") as f:
             data = json.load(f)
