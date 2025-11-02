@@ -63,24 +63,29 @@ jobs:
         run: |
           docker compose -f docker-compose.yml build
           docker compose -f docker-compose.yml up -d
-          echo "Waiting for MCP services to be healthy..."
-          # Check health of each service
+          echo "Waiting for MCP services to be healthy (up to 90 seconds)..."
+          # Check health of each service - give them more time to start
           for port in 8000 8001 8002 8003; do
-            for i in {1..30}; do
-              if curl -f http://localhost:$port/health >/dev/null 2>&1; then
+            echo "Checking port $port..."
+            for i in {1..45}; do
+              if curl -s -f http://localhost:$port/health >/dev/null 2>&1; then
                 echo "✓ Service on port $port is healthy"
                 break
               fi
-              if [ $i -eq 30 ]; then
-                echo "✗ Service on port $port failed to start"
+              if [ $i -eq 45 ]; then
+                echo "✗ Service on port $port failed to start after 90 seconds"
+                echo "Service logs:"
                 docker compose -f docker-compose.yml logs
                 exit 1
+              fi
+              if [ $((i % 5)) -eq 0 ]; then
+                echo "  Still waiting... ($((i*2)) seconds elapsed)"
               fi
               sleep 2
             done
           done
-          echo "All MCP services are healthy"
-        timeout-minutes: 5
+          echo "All MCP services are healthy!"
+        timeout-minutes: 10
 
       - name: Run trading simulation
         run: |
