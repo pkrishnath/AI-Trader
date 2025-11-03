@@ -86,11 +86,13 @@ class TradeLogger:
         else:
             result_str = str(result)
 
-        for line in result_str.split('\n')[:20]:  # Limit output
+        lines = result_str.split('\n')
+        for line in lines[:20]:  # Limit output
             print(f"   {line}")
 
-        if len(result_str.split('\n')) > 20:
-            print(f"   ... ({len(result_str.split('\n')) - 20} more lines)")
+        if len(lines) > 20:
+            remaining = len(lines) - 20
+            print(f"   ... ({remaining} more lines)")
 
     def error(self, error_msg: str, error_type: str = "Error"):
         """Log error with emphasis"""
