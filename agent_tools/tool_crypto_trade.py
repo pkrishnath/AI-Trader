@@ -3,16 +3,16 @@ import os
 import sys
 from typing import Any, Dict, List, Optional
 
+# Add project root directory to Python path BEFORE importing local modules
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
+
 from fastmcp import FastMCP
 
 from tools.general_tools import get_config_value, write_config_value
 from tools.crypto_tools import (
     get_crypto_price_on_date,
 )
-
-# Add project root directory to Python path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, project_root)
 
 mcp = FastMCP("CryptoTradeTools")
 
