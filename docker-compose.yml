@@ -48,6 +48,7 @@ services:
     environment:
       - TRADE_HTTP_PORT=8002
       - PYTHONPATH=/app
+      - SIGNATURE=${SIGNATURE}
     networks:
       - mcp-network
     volumes:

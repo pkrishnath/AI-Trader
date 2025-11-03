@@ -121,6 +121,10 @@ jobs:
           SIGNATURE=$(jq -r ".models[] | select(.name==\"$LLM_MODEL\").signature" $CONFIG_FILE)
           echo "SIGNATURE=$SIGNATURE" >> $GITHUB_ENV
 
+      - name: Create .env file
+        run: |
+          echo "SIGNATURE=${{ env.SIGNATURE }}" >> .env
+
       - name: Run services and trading simulation
         run: |
           docker compose -f docker-compose.yml down --volumes --rmi all || true # Clean up previous runs
