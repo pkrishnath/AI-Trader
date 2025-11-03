@@ -35,6 +35,7 @@ on:
     paths:
       - 'configs/**'
       - 'agent/**'
+      - 'prompts/**'
       - 'main.py'
       - '.github/workflows/hourly-trading.yml'
 
