@@ -10,20 +10,20 @@ echo "🚀 Launching AI Trader Environment..."
 
 echo "📊 Now getting and merging price data..."
 cd ./data
-python get_daily_price.py
-python merge_jsonl.py
+python3 get_daily_price.py
+python3 merge_jsonl.py
 cd ../
 
 echo "🔧 Now starting MCP services..."
 cd ./agent_tools
-python start_mcp_services.py
+python3 start_mcp_services.py
 cd ../
 
 #waiting for MCP services to start
 sleep 2
 
 echo "🤖 Now starting the main trading agent..."
-python main.py configs/default_config.json
+python3 main.py configs/default_config.json
 
 echo "✅ AI-Trader stopped"
 

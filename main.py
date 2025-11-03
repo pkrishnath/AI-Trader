@@ -171,9 +171,9 @@ async def main(config_path=None):
         print(f"🔧 BaseModel: {basemodel}")
 
         # Initialize runtime configuration
-        write_config_value("SIGNATURE", signature)
-        write_config_value("TODAY_DATE", END_DATE)
-        write_config_value("IF_TRADE", False)
+        os.environ["SIGNATURE"] = signature
+        os.environ["TODAY_DATE"] = END_DATE
+        os.environ["IF_TRADE"] = "False"
 
         # Get log path configuration
         log_path = log_config.get("log_path", "./data/agent_data")
