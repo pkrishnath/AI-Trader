@@ -36,46 +36,42 @@ def get_crypto_historical_data(symbol: str, days: int = 30) -> dict:
     crypto_id = CRYPTO_MAP[symbol]
 
     try:
-        url = f"{COINGECKO_API}/coins/{crypto_id}/market_chart"
+        url = f"{COINGECKO_API}/coins/{crypto_id}/ohlc"
         params = {"vs_currency": "usd", "days": days}
 
-        print(f"Fetching {days}-day historical data for {symbol}...")
+        print(f"Fetching {days}-day historical OHLC data for {symbol}...")
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
 
         data = response.json()
-        prices = data.get("prices", [])
 
-        if not prices:
-            print(f"No price data found for {symbol}")
+        if not data:
+            print(f"No OHLC data found for {symbol}")
             return {}
 
-        # Convert to OHLCV format (hourly)
+        # Convert to OHLCV format (4-hour)
         ohlcv_data = {}
-        for price_point in prices:
-            timestamp = price_point[0]  # milliseconds
-            price = price_point[1]
+        for ohlc_point in data:
+            timestamp = ohlc_point[0]  # milliseconds
+            o = ohlc_point[1]
+            h = ohlc_point[2]
+            l = ohlc_point[3]
+            c = ohlc_point[4]
 
-            # Convert timestamp to datetime string (YYYY-MM-DD HH:00:00)
+            # Convert timestamp to datetime string (YYYY-MM-DD HH:MM:SS)
             dt_object = datetime.fromtimestamp(timestamp / 1000)
-            hour_str = dt_object.strftime("%Y-%m-%d %H:00:00")
+            datetime_str = dt_object.strftime("%Y-%m-%d %H:%M:%S")
 
-            if hour_str not in ohlcv_data:
-                ohlcv_data[hour_str] = {
-                    "date": hour_str,
-                    "open": price,
-                    "high": price,
-                    "low": price,
-                    "close": price,
-                    "volume": 0,
-                }
-            else:
-                # Update high/low if needed
-                ohlcv_data[hour_str]["high"] = max(ohlcv_data[hour_str]["high"], price)
-                ohlcv_data[hour_str]["low"] = min(ohlcv_data[hour_str]["low"], price)
-                ohlcv_data[hour_str]["close"] = price
+            ohlcv_data[datetime_str] = {
+                "date": datetime_str,
+                "open": o,
+                "high": h,
+                "low": l,
+                "close": c,
+                "volume": 0, # Volume is not provided by this endpoint
+            }
 
-        print(f"✓ Retrieved {len(ohlcv_data)} hours of data for {symbol}")
+        print(f"✓ Retrieved {len(ohlcv_data)} data points for {symbol}")
         return ohlcv_data
 
     except requests.exceptions.RequestException as e:
