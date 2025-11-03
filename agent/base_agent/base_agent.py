@@ -18,6 +18,7 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_openai import ChatOpenAI
 
 from prompts.agent_prompt import STOP_SIGNAL, get_agent_system_prompt
+from prompts.crypto_agent_prompt import get_crypto_agent_system_prompt
 from tools.enhanced_logging import get_logger
 from tools.general_tools import (
     extract_conversation,
@@ -157,6 +158,7 @@ class BaseAgent:
         self,
         signature: str,
         basemodel: str,
+        asset_type: str = "stock",
         stock_symbols: Optional[List[str]] = None,
         mcp_config: Optional[Dict[str, Dict[str, Any]]] = None,
         log_path: Optional[str] = None,
@@ -187,6 +189,7 @@ class BaseAgent:
         """
         self.signature = signature
         self.basemodel = basemodel
+        self.asset_type = asset_type
         self.stock_symbols = stock_symbols or self.DEFAULT_STOCK_SYMBOLS
         self.max_steps = max_steps
         self.max_retries = max_retries
@@ -404,10 +407,15 @@ class BaseAgent:
         log_file = self._setup_logging(today_date)
 
         # Update system prompt
+        if self.asset_type == "crypto":
+            system_prompt = get_crypto_agent_system_prompt(today_date, self.signature)
+        else:
+            system_prompt = get_agent_system_prompt(today_date, self.signature)
+
         self.agent = create_agent(
             self.model,
             tools=self.tools,
-            system_prompt=get_agent_system_prompt(today_date, self.signature),
+            system_prompt=system_prompt,
         )
 
         # Initial user query

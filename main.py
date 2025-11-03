@@ -183,8 +183,10 @@ async def main(config_path=None):
         # 2. Config file (trading_universe) - medium priority
         # 3. Default NASDAQ 100 stocks - lowest priority
 
-        trading_symbols = config.get("trading_universe") or all_nasdaq_100_symbols
-        asset_type = os.getenv("ASSET_TYPE", "").lower()
+        asset_type = os.getenv("ASSET_TYPE", "stock").lower()
+        if config.get("crypto_mode"):
+            asset_type = "crypto"
+
         trading_symbols_env = os.getenv("TRADING_SYMBOLS", "").strip()
 
         if trading_symbols_env:
@@ -206,6 +208,7 @@ async def main(config_path=None):
             agent = AgentClass(
                 signature=signature,
                 basemodel=basemodel,
+                asset_type=asset_type,
                 stock_symbols=trading_symbols,
                 log_path=log_path,
                 openai_base_url=openai_base_url,
