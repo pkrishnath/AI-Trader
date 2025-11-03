@@ -396,7 +396,7 @@ def get_latest_position(
     )
 
     if not position_file.exists():
-        return {}, -1
+        return {"CASH": 10000.0}, -1
 
     # 先尝试读取当天记录
     max_id_today = -1
@@ -438,6 +438,8 @@ def get_latest_position(
             except Exception:
                 continue
 
+    if not latest_positions_prev and max_id_prev == -1:
+        return {"CASH": 10000.0}, -1
     return latest_positions_prev, max_id_prev
 
 
