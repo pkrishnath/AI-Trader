@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 from tools.crypto_tools import (
     SUPPORTED_CRYPTOS,
     format_crypto_price_data,
-    get_crypto_latest_price,
     get_crypto_price_on_date,
     load_crypto_price_data,
 )
