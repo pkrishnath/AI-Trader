@@ -133,7 +133,7 @@ jobs:
         run: |
           docker compose -f docker-compose.yml down --volumes --rmi all || true # Clean up previous runs
           docker compose -f docker-compose.yml build
-          docker compose -f docker-compose.yml up -V
+          docker compose -f docker-compose.yml up -d -V
           echo "MCP services launched. Waiting for all services to be healthy..."
 
           # Wait for all services to be healthy (max 120 seconds)
