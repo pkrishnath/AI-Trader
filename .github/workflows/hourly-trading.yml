@@ -96,7 +96,7 @@ jobs:
           elif [ "$ASSET_TYPE" == "stock" ]; then
             python get_daily_price.py --symbols "$SYMBOLS"
           fi
-          python merge_jsonl.py
+          python merge_jsonl.py --asset_type "$ASSET_TYPE"
           cd ..
 
       - name: Set up Docker Buildx

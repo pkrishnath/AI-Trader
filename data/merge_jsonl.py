@@ -1,6 +1,7 @@
 import glob
 import json
 import os
+import argparse
 
 all_nasdaq_100_symbols = [
     "NVDA",
@@ -106,15 +107,19 @@ all_nasdaq_100_symbols = [
     "GFS",
 ]
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--asset_type", default="stock", help="Type of asset to merge (stock or crypto)")
+args = parser.parse_args()
+
 # 合并所有以 daily_price 开头的 json，逐文件一行写入 merged.jsonl
 current_dir = os.path.dirname(__file__)
-pattern = os.path.join(current_dir, "daily_price*.json")
-files = sorted(glob.glob(pattern))
 
-# Also include crypto price files (BTC, ETH)
-crypto_pattern = os.path.join(current_dir, "crypto_prices*.json")
-crypto_files = sorted(glob.glob(crypto_pattern))
-files.extend(crypto_files)
+if args.asset_type == "stock":
+    pattern = os.path.join(current_dir, "daily_price*.json")
+    files = sorted(glob.glob(pattern))
+else:
+    pattern = os.path.join(current_dir, "crypto_prices*.json")
+    files = sorted(glob.glob(pattern))
 
 output_file = os.path.join(current_dir, "merged.jsonl")
 
