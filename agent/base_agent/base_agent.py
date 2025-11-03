@@ -428,7 +428,9 @@ class BaseAgent:
         while current_step < self.max_steps:
             current_step += 1
             logger.step(current_step, self.max_steps)
-            print(f"🔄 Step {current_step}/{self.max_steps}")
+            print(f"\n{'='*70}")
+            print(f"🔄 STEP {current_step}/{self.max_steps}")
+            print(f"{'='*70}")
 
             try:
                 # Call agent
@@ -440,6 +442,10 @@ class BaseAgent:
                 # Log agent thinking
                 if agent_response:
                     logger.thinking(agent_response)
+                    print("\n📝 Agent Response Summary:")
+                    # Show first 200 chars of response
+                    summary = agent_response[:300] + ("..." if len(agent_response) > 300 else "")
+                    print(f"   {summary}")
 
                 # Check stop signal
                 if STOP_SIGNAL in agent_response:
@@ -455,8 +461,15 @@ class BaseAgent:
                 tool_msgs = extract_tool_messages(response)
 
                 # Log tool results
-                for msg in tool_msgs:
-                    logger.tool_result("Agent Tool", msg.content if hasattr(msg, 'content') else str(msg), success=True)
+                if tool_msgs:
+                    print(f"\n🔧 Tool Results ({len(tool_msgs)} tools called):")
+                    for i, msg in enumerate(tool_msgs, 1):
+                        content = msg.content if hasattr(msg, 'content') else str(msg)
+                        print(f"   [{i}] {content[:200]}..." if len(content) > 200 else f"   [{i}] {content}")
+                        logger.tool_result("Agent Tool", content, success=True)
+                else:
+                    print("\n   ℹ️  No tool calls in this step")
+
                 tool_response = "\n".join([msg.content for msg in tool_msgs])
 
                 # Prepare new messages
