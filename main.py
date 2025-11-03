@@ -130,6 +130,15 @@ async def main(config_path=None):
     # Get model list from configuration file (only select enabled models)
     enabled_models = [model for model in config["models"] if model.get("enabled", True)]
 
+    # Replace API key placeholders
+    for model in enabled_models:
+        if model.get("openai_api_key") == "{{DEEPSEEK_API_KEY}}":
+            deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+            if not deepseek_api_key:
+                print("❌ DEEPSEEK_API_KEY environment variable not set.")
+                exit(1)
+            model["openai_api_key"] = deepseek_api_key
+
     # Get agent configuration
     agent_config = config.get("agent_config", {})
     log_config = config.get("log_config", {})

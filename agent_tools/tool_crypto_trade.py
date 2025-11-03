@@ -80,6 +80,13 @@ def buy_crypto(crypto_symbol: str, amount: float) -> Dict[str, Any]:
         }
 
     # Step 4: Validate buy conditions
+    if this_symbol_price is None:
+        return {
+            "error": f"Price for {crypto_symbol} not available on {today_date}! This action will not be allowed.",
+            "symbol": crypto_symbol,
+            "date": today_date,
+        }
+
     cash_left = current_position["CASH"] - this_symbol_price * amount
 
     if cash_left < 0:
@@ -171,6 +178,13 @@ def sell_crypto(crypto_symbol: str, amount: float) -> Dict[str, Any]:
         }
 
     # Step 4: Validate sell conditions
+    if this_symbol_price is None:
+        return {
+            "error": f"Price for {crypto_symbol} not available on {today_date}! This action will not be allowed.",
+            "symbol": crypto_symbol,
+            "date": today_date,
+        }
+
     if crypto_symbol not in current_position:
         return {
             "error": f"No position for {crypto_symbol}! This action will not be allowed.",
