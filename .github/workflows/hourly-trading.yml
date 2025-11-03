@@ -19,7 +19,7 @@ on:
       llm_model:
         description: 'LLM model to use for trading agent'
         required: true
-        default: 'groq'
+        default: 'deepseek'
         type: choice
         options:
           - groq
