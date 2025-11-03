@@ -38,6 +38,7 @@ on:
       - 'prompts/**'
       - 'main.py'
       - '.github/workflows/hourly-trading.yml'
+      - 'docker-compose.yml'
 
 jobs:
   trading-run:
