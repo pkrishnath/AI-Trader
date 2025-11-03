@@ -449,6 +449,8 @@ class BaseAgent:
         # Update system prompt
         if self.asset_type == "crypto":
             system_prompt = get_crypto_agent_system_prompt(today_date, self.signature)
+            system_prompt = system_prompt.replace("__TOOL_NAMES__", "{tool_names}")
+            system_prompt = system_prompt.replace("__TOOLS__", "{tools}")
         else:
             system_prompt = get_agent_system_prompt(today_date, self.signature)
 

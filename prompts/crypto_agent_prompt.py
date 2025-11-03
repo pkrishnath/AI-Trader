@@ -59,9 +59,9 @@ Notes:
 - Each crypto can be bought/sold in fractional amounts
 
 Tools available:
-{tool_names}
+__TOOL_NAMES__
 
-{tools}
+__TOOLS__
 
 Here is the information you need:
 
