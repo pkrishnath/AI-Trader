@@ -5,16 +5,23 @@ from typing import Any, Dict, List, Optional
 
 # Add project root directory to Python path BEFORE importing local modules
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+print(f"DEBUG: __file__ = {__file__}", file=sys.stderr)
+print(f"DEBUG: project_root = {project_root}", file=sys.stderr)
 sys.path.insert(0, project_root)
+print(f"DEBUG: sys.path = {sys.path[:3]}", file=sys.stderr)
 
 from fastmcp import FastMCP
+print("DEBUG: FastMCP imported successfully", file=sys.stderr)
 
 from tools.general_tools import get_config_value, write_config_value
+print("DEBUG: general_tools imported successfully", file=sys.stderr)
 from tools.crypto_tools import (
     get_crypto_price_on_date,
 )
+print("DEBUG: crypto_tools imported successfully", file=sys.stderr)
 
 mcp = FastMCP("CryptoTradeTools")
+print("DEBUG: FastMCP instance created successfully", file=sys.stderr)
 
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
@@ -232,5 +239,7 @@ def sell_crypto(crypto_symbol: str, amount: float) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
+    print("DEBUG: Starting main block", file=sys.stderr)
     port = int(os.getenv("CRYPTO_TRADE_HTTP_PORT", "8004"))
+    print(f"DEBUG: Starting MCP server on port {port}", file=sys.stderr)
     mcp.run(transport="streamable-http", host="0.0.0.0", port=port)
