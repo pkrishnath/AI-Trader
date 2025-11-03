@@ -7,7 +7,6 @@ from fastmcp import FastMCP
 
 from tools.general_tools import get_config_value, write_config_value
 from tools.crypto_tools import (
-    get_crypto_latest_price,
     get_crypto_price_on_date,
 )
 
