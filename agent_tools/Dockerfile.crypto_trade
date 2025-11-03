@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install curl
+RUN apt-get update && apt-get install -y curl netcat-traditional
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy all necessary files
+COPY agent_tools/ /app/agent_tools/
+COPY tools/ /app/tools/
+COPY configs/ /app/configs/
+COPY data/ /app/data/
+
+# Expose port
+EXPOSE 8004
+
+# Health check endpoint
+HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=5 \
+  CMD curl -f http://localhost:8004/health || exit 1
+
+# Run the crypto trade service
+CMD ["python", "agent_tools/tool_crypto_trade.py"]

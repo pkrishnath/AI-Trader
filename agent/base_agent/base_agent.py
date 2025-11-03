@@ -253,44 +253,84 @@ class BaseAgent:
         """Get default MCP configuration"""
         if os.getenv("GITHUB_ACTIONS") == "true":
             # Use service names for GitHub Actions environment
-            return {
-                "math": {
-                    "transport": "streamable_http",
-                    "url": f"http://math-service:{os.getenv('MATH_HTTP_PORT', '8000')}/mcp",
-                },
-                "stock_local": {
-                    "transport": "streamable_http",
-                    "url": f"http://prices-service:{os.getenv('GETPRICE_HTTP_PORT', '8003')}/mcp",
-                },
-                "search": {
-                    "transport": "streamable_http",
-                    "url": f"http://search-service:{os.getenv('SEARCH_HTTP_PORT', '8001')}/mcp",
-                },
-                "trade": {
-                    "transport": "streamable_http",
-                    "url": f"http://trade-service:{os.getenv('TRADE_HTTP_PORT', '8002')}/mcp",
-                },
-            }
+            if self.asset_type == "crypto":
+                return {
+                    "math": {
+                        "transport": "streamable_http",
+                        "url": f"http://math-service:{os.getenv('MATH_HTTP_PORT', '8000')}/mcp",
+                    },
+                    "crypto_local": {
+                        "transport": "streamable_http",
+                        "url": f"http://prices-service:{os.getenv('GETPRICE_HTTP_PORT', '8003')}/mcp",
+                    },
+                    "search": {
+                        "transport": "streamable_http",
+                        "url": f"http://search-service:{os.getenv('SEARCH_HTTP_PORT', '8001')}/mcp",
+                    },
+                    "crypto_trade": {
+                        "transport": "streamable_http",
+                        "url": f"http://crypto-trade-service:{os.getenv('CRYPTO_TRADE_HTTP_PORT', '8004')}/mcp",
+                    },
+                }
+            else:
+                return {
+                    "math": {
+                        "transport": "streamable_http",
+                        "url": f"http://math-service:{os.getenv('MATH_HTTP_PORT', '8000')}/mcp",
+                    },
+                    "stock_local": {
+                        "transport": "streamable_http",
+                        "url": f"http://prices-service:{os.getenv('GETPRICE_HTTP_PORT', '8003')}/mcp",
+                    },
+                    "search": {
+                        "transport": "streamable_http",
+                        "url": f"http://search-service:{os.getenv('SEARCH_HTTP_PORT', '8001')}/mcp",
+                    },
+                    "trade": {
+                        "transport": "streamable_http",
+                        "url": f"http://trade-service:{os.getenv('TRADE_HTTP_PORT', '8002')}/mcp",
+                    },
+                }
         else:
             # Use host.docker.internal for local development
-            return {
-                "math": {
-                    "transport": "streamable_http",
-                    "url": f"http://host.docker.internal:{os.getenv('MATH_HTTP_PORT', '8000')}/mcp",
-                },
-                "stock_local": {
-                    "transport": "streamable_http",
-                    "url": f"http://host.docker.internal:{os.getenv('GETPRICE_HTTP_PORT', '8003')}/mcp",
-                },
-                "search": {
-                    "transport": "streamable_http",
-                    "url": f"http://host.docker.internal:{os.getenv('SEARCH_HTTP_PORT', '8001')}/mcp",
-                },
-                "trade": {
-                    "transport": "streamable_http",
-                    "url": f"http://host.docker.internal:{os.getenv('TRADE_HTTP_PORT', '8002')}/mcp",
-                },
-            }
+            if self.asset_type == "crypto":
+                return {
+                    "math": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('MATH_HTTP_PORT', '8000')}/mcp",
+                    },
+                    "crypto_local": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('GETPRICE_HTTP_PORT', '8003')}/mcp",
+                    },
+                    "search": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('SEARCH_HTTP_PORT', '8001')}/mcp",
+                    },
+                    "crypto_trade": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('CRYPTO_TRADE_HTTP_PORT', '8004')}/mcp",
+                    },
+                }
+            else:
+                return {
+                    "math": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('MATH_HTTP_PORT', '8000')}/mcp",
+                    },
+                    "stock_local": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('GETPRICE_HTTP_PORT', '8003')}/mcp",
+                    },
+                    "search": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('SEARCH_HTTP_PORT', '8001')}/mcp",
+                    },
+                    "trade": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('TRADE_HTTP_PORT', '8002')}/mcp",
+                    },
+                }
 
     async def initialize(self) -> None:
         """Initialize MCP client and AI model"""
