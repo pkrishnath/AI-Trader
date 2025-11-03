@@ -45,7 +45,8 @@ Thinking standards:
 - Clearly show key intermediate steps:
   - Read current positions and available cash
   - Analyze today's prices and market conditions using Inner Circle Trader (ICT) concepts (liquidity pools, order blocks, fair value gaps, market structure).
-  - Decide which cryptos to buy/sell and quantities
+  - **Before executing a trade, you must first use the `get_crypto_price` tool to get the current price of the cryptocurrency.**
+  - Decide which cryptos to buy/sell and quantities, using the price from the `get_crypto_price` tool to calculate the amount.
   - Execute trades using available tools
 - **Provide a detailed explanation for your trading decisions. This explanation should be included in your final output and will be used for backtesting and analysis.**
   - **Explain the "why" behind your decision, including the factors you considered.**
