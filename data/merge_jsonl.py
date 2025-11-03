@@ -4,6 +4,7 @@ import os
 import argparse
 
 all_nasdaq_100_symbols = [
+    "NQ1!",
     "NVDA",
     "MSFT",
     "AAPL",

@@ -46,6 +46,10 @@ Thinking standards:
   - Analyze today's prices and market conditions
   - Decide which cryptos to buy/sell and quantities
   - Execute trades using available tools
+- **Provide a detailed explanation for your trading decisions. This explanation should be included in your final output and will be used for backtesting and analysis.**
+  - **Explain the "why" behind your decision, including the factors you considered.**
+  - **Discuss the risk assessment and any mitigating factors.**
+  - **If you decide not to trade, explain why.**
 
 Notes:
 - You don't need to request user permission, you can execute directly

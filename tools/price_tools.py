@@ -8,6 +8,8 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+import csv
+from datetime import timezone
 
 # 将项目根目录加入 Python 路径，便于从子目录直接运行本文件
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -16,6 +18,7 @@ if project_root not in sys.path:
 from tools.general_tools import get_config_value
 
 all_nasdaq_100_symbols = [
+    "NQ1!",
     "NVDA",
     "MSFT",
     "AAPL",
@@ -141,6 +144,38 @@ def get_yesterday_date(today_date: str) -> str:
     return yesterday_date
 
 
+def get_nq_price_from_csv(date_str: str) -> Tuple[Optional[float], Optional[float]]:
+    """
+    Reads NQ1! data from the CSV file and returns the open and close price for a given date.
+    """
+    base_dir = Path(__file__).resolve().parents[1]
+    csv_path = base_dir / "tv_data" / "CME_MINI_NQ1!, 3.csv"
+
+    if not csv_path.exists():
+        return None, None
+
+    target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+    first_row = None
+    last_row = None
+
+    with open(csv_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            timestamp = int(row["time"])
+            row_date = datetime.fromtimestamp(timestamp, tz=timezone.utc).date()
+
+            if row_date == target_date:
+                if first_row is None:
+                    first_row = row
+                last_row = row
+
+    open_price = float(first_row["open"]) if first_row else None
+    close_price = float(last_row["close"]) if last_row else None
+
+    return open_price, close_price
+
+
 def get_open_prices(
     today_date: str, symbols: List[str], merged_path: Optional[str] = None
 ) -> Dict[str, Optional[float]]:
@@ -156,6 +191,14 @@ def get_open_prices(
     """
     wanted = set(symbols)
     results: Dict[str, Optional[float]] = {}
+
+    if "NQ1!" in wanted:
+        open_price, _ = get_nq_price_from_csv(today_date)
+        results["NQ1!_price"] = open_price
+        wanted.remove("NQ1!")
+
+    if not wanted:
+        return results
 
     if merged_path is None:
         base_dir = Path(__file__).resolve().parents[1]
@@ -210,6 +253,16 @@ def get_yesterday_open_and_close_price(
     wanted = set(symbols)
     buy_results: Dict[str, Optional[float]] = {}
     sell_results: Dict[str, Optional[float]] = {}
+    yesterday_date = get_yesterday_date(today_date)
+
+    if "NQ1!" in wanted:
+        open_price, close_price = get_nq_price_from_csv(yesterday_date)
+        buy_results["NQ1!_price"] = open_price
+        sell_results["NQ1!_price"] = close_price
+        wanted.remove("NQ1!")
+
+    if not wanted:
+        return buy_results, sell_results
 
     if merged_path is None:
         base_dir = Path(__file__).resolve().parents[1]
@@ -219,8 +272,6 @@ def get_yesterday_open_and_close_price(
 
     if not merged_file.exists():
         return buy_results, sell_results
-
-    yesterday_date = get_yesterday_date(today_date)
 
     with merged_file.open("r", encoding="utf-8") as f:
         for line in f:

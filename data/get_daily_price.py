@@ -7,6 +7,7 @@ load_dotenv()
 import json
 
 all_nasdaq_100_symbols = [
+    "NQ1!",
     "NVDA",
     "MSFT",
     "AAPL",

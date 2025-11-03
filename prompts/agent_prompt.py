@@ -23,6 +23,7 @@ sys.path.insert(0, project_root)
 load_dotenv()
 
 all_nasdaq_100_symbols = [
+    "NQ1!",
     "NVDA",
     "MSFT",
     "AAPL",
@@ -141,6 +142,10 @@ Thinking standards:
 - Clearly show key intermediate steps:
   - Read input of yesterday's positions and today's prices
   - Update valuation and adjust weights for each target (if strategy requires)
+- **Provide a detailed explanation for your trading decisions. This explanation should be included in your final output and will be used for backtesting and analysis.**
+  - **Explain the "why" behind your decision, including the factors you considered.**
+  - **Discuss the risk assessment and any mitigating factors.**
+  - **If you decide not to trade, explain why.**
 
 Notes:
 - You don't need to request user permission during operations, you can execute directly
