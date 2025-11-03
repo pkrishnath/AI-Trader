@@ -49,6 +49,7 @@ services:
       - TRADE_HTTP_PORT=8002
       - PYTHONPATH=/app
       - SIGNATURE=${SIGNATURE}
+      - RUNTIME_ENV_PATH=/app/.runtime_env.json
     networks:
       - mcp-network
     volumes:
@@ -91,6 +92,7 @@ services:
       - CRYPTO_TRADE_HTTP_PORT=8004
       - PYTHONPATH=/app
       - SIGNATURE=${SIGNATURE}
+      - RUNTIME_ENV_PATH=/app/.runtime_env.json
     networks:
       - mcp-network
     volumes:
