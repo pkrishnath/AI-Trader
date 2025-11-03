@@ -164,6 +164,7 @@ jobs:
 
           if [ $attempt -eq $max_attempts ]; then
             echo "⚠️  Timeout waiting for services to be healthy. Checking logs..."
+            docker compose -f docker-compose.yml logs crypto-trade-service
             docker compose -f docker-compose.yml logs
             exit 1
           fi
