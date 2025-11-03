@@ -36,6 +36,8 @@ on:
       - 'configs/**'
       - 'agent/**'
       - 'prompts/**'
+      - 'data/**'
+      - 'tools/**'
       - 'main.py'
       - '.github/workflows/hourly-trading.yml'
       - 'docker-compose.yml'
