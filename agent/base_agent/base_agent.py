@@ -646,7 +646,8 @@ class BaseAgent:
         current_date = max_date_obj + timedelta(days=1)
 
         while current_date <= end_date_obj:
-            if current_date.weekday() < 5:  # Weekdays
+            # For crypto, trade 24/7; for stocks, trade on weekdays only
+            if self.asset_type == "crypto" or current_date.weekday() < 5:
                 trading_dates.append(current_date.strftime("%Y-%m-%d"))
             current_date += timedelta(days=1)
 
