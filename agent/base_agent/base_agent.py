@@ -19,6 +19,7 @@ from langchain_openai import ChatOpenAI
 
 from prompts.agent_prompt import STOP_SIGNAL, get_agent_system_prompt
 from prompts.crypto_agent_prompt import get_crypto_agent_system_prompt
+from prompts.futures_agent_prompt import get_futures_agent_system_prompt
 from tools.enhanced_logging import get_logger
 from tools.general_tools import (
     extract_conversation,
@@ -253,7 +254,8 @@ class BaseAgent:
         """Get default MCP configuration"""
         if os.getenv("GITHUB_ACTIONS") == "true":
             # Use service names for GitHub Actions environment
-            if self.asset_type == "crypto":
+            if self.asset_type == "crypto" or self.asset_type == "futures":
+                # Futures and crypto both use prices-service and crypto-trade-service
                 return {
                     "math": {
                         "transport": "streamable_http",
@@ -293,7 +295,8 @@ class BaseAgent:
                 }
         else:
             # Use host.docker.internal for local development
-            if self.asset_type == "crypto":
+            if self.asset_type == "crypto" or self.asset_type == "futures":
+                # Futures and crypto both use prices-service and crypto-trade-service
                 return {
                     "math": {
                         "transport": "streamable_http",
@@ -449,6 +452,10 @@ class BaseAgent:
         # Update system prompt
         if self.asset_type == "crypto":
             system_prompt = get_crypto_agent_system_prompt(today_date, self.signature)
+            system_prompt = system_prompt.replace("__TOOL_NAMES__", "{tool_names}")
+            system_prompt = system_prompt.replace("__TOOLS__", "{tools}")
+        elif self.asset_type == "futures":
+            system_prompt = get_futures_agent_system_prompt(today_date, self.signature)
             system_prompt = system_prompt.replace("__TOOL_NAMES__", "{tool_names}")
             system_prompt = system_prompt.replace("__TOOLS__", "{tools}")
         else:
@@ -646,8 +653,8 @@ class BaseAgent:
         current_date = max_date_obj + timedelta(days=1)
 
         while current_date <= end_date_obj:
-            # For crypto, trade 24/7; for stocks, trade on weekdays only
-            if self.asset_type == "crypto" or current_date.weekday() < 5:
+            # For crypto and futures, trade 24/7; for stocks, trade on weekdays only
+            if self.asset_type == "crypto" or self.asset_type == "futures" or current_date.weekday() < 5:
                 trading_dates.append(current_date.strftime("%Y-%m-%d"))
             current_date += timedelta(days=1)
 

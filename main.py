@@ -201,6 +201,8 @@ async def main(config_path=None):
         asset_type = os.getenv("ASSET_TYPE", "stock").lower()
         if config.get("crypto_mode"):
             asset_type = "crypto"
+        elif config.get("futures_mode"):
+            asset_type = "futures"
 
         trading_symbols_env = os.getenv("TRADING_SYMBOLS", "").strip()
 
