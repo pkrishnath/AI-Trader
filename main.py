@@ -121,10 +121,20 @@ async def main(config_path=None):
         print(f"⚠️  Using environment variable to override END_DATE: {END_DATE}")
 
     # Dynamic date handling
-    if INIT_DATE == "TODAY-7":
-        INIT_DATE = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
-    if END_DATE == "TODAY":
-        END_DATE = datetime.now().strftime("%Y-%m-%d")
+    def parse_dynamic_date(date_str):
+        """Parse dynamic date strings like TODAY, TODAY-1, TODAY-7"""
+        if date_str.startswith("TODAY"):
+            days_offset = 0
+            if "-" in date_str and date_str != "TODAY":
+                try:
+                    days_offset = -int(date_str.split("-", 1)[1])
+                except (ValueError, IndexError):
+                    pass
+            return (datetime.now() + timedelta(days=days_offset)).strftime("%Y-%m-%d")
+        return date_str
+
+    INIT_DATE = parse_dynamic_date(INIT_DATE)
+    END_DATE = parse_dynamic_date(END_DATE)
 
     # Validate date range
     INIT_DATE_obj = datetime.strptime(INIT_DATE, "%Y-%m-%d").date()
