@@ -3,8 +3,8 @@
   "crypto_mode": true,
   "trading_universe": ["BTC", "ETH"],
   "date_range": {
-    "init_date": "2025-10-28",
-    "end_date": "2025-11-02"
+    "init_date": "TODAY-7",
+    "end_date": "TODAY"
   },
   "models": [
     {
