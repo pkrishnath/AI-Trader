@@ -62,7 +62,11 @@ def get_crypto_price_on_date(
 
     for dt_str in data.keys():
         if dt_str.startswith(target_date):
-            dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
+            # Handle both formats: "YYYY-MM-DD HH:MM:SS" and "YYYY-MM-DD"
+            try:
+                dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                dt = datetime.strptime(dt_str, "%Y-%m-%d")
             if latest_dt is None or dt > latest_dt:
                 latest_dt = dt
                 latest_datetime_str = dt_str
