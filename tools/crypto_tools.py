@@ -42,23 +42,38 @@ def load_crypto_price_data(crypto_symbol: str, data_dir: str = "data") -> Dict:
 
 
 def get_crypto_price_on_date(
-    crypto_symbol: str, target_date: str, price_type: str = "close"
+    crypto_symbol: str, target_date: str, price_type: str = "close", hour: Optional[int] = None
 ) -> Optional[float]:
     """
-    Get cryptocurrency price on a specific date
+    Get cryptocurrency price on a specific date and hour.
 
     Args:
         crypto_symbol: Crypto symbol (BTC, ETH)
         target_date: Date string (YYYY-MM-DD)
         price_type: Type of price (open, close, high, low)
+        hour: Optional hour (0-23). If None, get the latest hour for the date.
 
     Returns:
         Price value or None if not found
     """
     data = load_crypto_price_data(crypto_symbol)
 
-    if target_date in data:
-        return data[target_date].get(price_type, None)
+    if hour is not None:
+        target_datetime_str = f"{target_date} {hour:02d}:00:00"
+        if target_datetime_str in data:
+            return data[target_datetime_str].get(price_type, None)
+    else:
+        # Find the latest hour for the given date
+        latest_hour = -1
+        for dt_str in data.keys():
+            if dt_str.startswith(target_date):
+                h = int(dt_str.split(' ')[1].split(':')[0])
+                if h > latest_hour:
+                    latest_hour = h
+        
+        if latest_hour != -1:
+            target_datetime_str = f"{target_date} {latest_hour:02d}:00:00"
+            return data[target_datetime_str].get(price_type, None)
 
     return None
 
@@ -115,19 +130,28 @@ def format_crypto_price_data(crypto_symbol: str, target_date: str) -> str:
         target_date: Date to get prices for
 
     Returns:
-        Formatted string with price data
+        Formatted string with price data for the latest hour of the day
     """
     data = load_crypto_price_data(crypto_symbol)
 
-    if target_date not in data:
-        return f"{crypto_symbol}: No data available for {target_date}"
+    latest_hour = -1
+    latest_hour_data = None
+    for dt_str, price_data in data.items():
+        if dt_str.startswith(target_date):
+            h = int(dt_str.split(' ')[1].split(':')[0])
+            if h > latest_hour:
+                latest_hour = h
+                latest_hour_data = price_data
 
-    prices = data[target_date]
-    return f"""{crypto_symbol} ({target_date}):
+    if latest_hour_data:
+        prices = latest_hour_data
+        return f"""{crypto_symbol} ({prices.get('date')}):
   Open:  ${prices.get('open', 'N/A'):,.2f}
   High:  ${prices.get('high', 'N/A'):,.2f}
   Low:   ${prices.get('low', 'N/A'):,.2f}
   Close: ${prices.get('close', 'N/A'):,.2f}"""
+
+    return f"{crypto_symbol}: No data available for {target_date}"
 
 
 def calculate_crypto_returns(
