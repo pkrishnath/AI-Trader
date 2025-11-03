@@ -18,6 +18,7 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_openai import ChatOpenAI
 
 from prompts.agent_prompt import STOP_SIGNAL, get_agent_system_prompt
+from tools.enhanced_logging import get_logger
 from tools.general_tools import (
     extract_conversation,
     extract_tool_messages,
@@ -392,6 +393,11 @@ class BaseAgent:
         Args:
             today_date: Trading date
         """
+        # Initialize enhanced logger
+        logger = get_logger()
+        logger.header(f"Trading Session: {today_date}")
+        logger.info(f"Trading {len(self.stock_symbols)} assets: {', '.join(self.stock_symbols)}")
+
         print(f"📈 Starting trading session: {today_date}")
 
         # Set up logging
@@ -418,8 +424,10 @@ class BaseAgent:
 
         # Trading loop
         current_step = 0
+        total_trades = 0
         while current_step < self.max_steps:
             current_step += 1
+            logger.step(current_step, self.max_steps)
             print(f"🔄 Step {current_step}/{self.max_steps}")
 
             try:
@@ -429,8 +437,13 @@ class BaseAgent:
                 # Extract agent response
                 agent_response = extract_conversation(response, "final")
 
+                # Log agent thinking
+                if agent_response:
+                    logger.thinking(agent_response)
+
                 # Check stop signal
                 if STOP_SIGNAL in agent_response:
+                    logger.success("Stop signal detected, trading session ended")
                     print("✅ Received stop signal, trading session ended")
                     print(agent_response)
                     self._log_message(
@@ -440,6 +453,10 @@ class BaseAgent:
 
                 # Extract tool messages
                 tool_msgs = extract_tool_messages(response)
+
+                # Log tool results
+                for msg in tool_msgs:
+                    logger.tool_result("Agent Tool", msg.content if hasattr(msg, 'content') else str(msg), success=True)
                 tool_response = "\n".join([msg.content for msg in tool_msgs])
 
                 # Prepare new messages
@@ -456,12 +473,23 @@ class BaseAgent:
                 self._log_message(log_file, new_messages[1])
 
             except Exception as e:
+                logger.error(f"Trading step {current_step} failed: {str(e)}", "TradingStepError")
                 print(f"❌ Trading session error: {str(e)}")
                 print(f"Error details: {e}")
                 raise
 
         # Handle trading results
         await self._handle_trading_result(today_date)
+
+        # Log session summary
+        logger.execution_summary(
+            date=today_date,
+            status="success",
+            trades_made=total_trades,
+            p_and_l=0.0,  # Calculate from position file if available
+            total_cost=0.0,  # Will be populated from API calls
+            total_tokens=0  # Will be populated from API calls
+        )
 
     async def _handle_trading_result(self, today_date: str) -> None:
         """Handle trading results"""
