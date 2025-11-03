@@ -95,11 +95,12 @@ jobs:
           cd data
           ASSET_TYPE="${{ github.event.inputs.asset_type || 'crypto' }}"
           SYMBOLS="${{ github.event.inputs.symbols || 'BTC,ETH' }}"
-          if [ "$ASSET_TYPE" == "crypto" ]; then
-            python get_crypto_prices.py --symbols "$SYMBOLS"
-          elif [ "$ASSET_TYPE" == "stock" ]; then
-            python get_daily_price.py --symbols "$SYMBOLS"
-          fi
+
+          # Use unified data fetcher (checks local CSV first, falls back to API)
+          echo "📊 Fetching data with unified CSV-first strategy..."
+          python get_data.py --asset-type "$ASSET_TYPE" --symbols "$SYMBOLS"
+
+          # Merge data for dashboard
           python merge_jsonl.py --asset_type "$ASSET_TYPE"
           cd ..
 

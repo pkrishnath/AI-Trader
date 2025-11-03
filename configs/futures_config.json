@@ -1,0 +1,49 @@
+{
+  "agent_type": "BaseAgent",
+  "futures_mode": true,
+  "trading_universe": ["NQ1"],
+  "date_range": {
+    "init_date": "TODAY-7",
+    "end_date": "TODAY-1"
+  },
+  "models": [
+    {
+      "name": "gpt-4o",
+      "basemodel": "gpt-4o",
+      "signature": "gpt-4o-futures-trader",
+      "enabled": false
+    },
+    {
+      "name": "deepseek-chat",
+      "basemodel": "deepseek-chat",
+      "signature": "deepseek-futures-trader",
+      "openai_api_key": "{{DEEPSEEK_API_KEY}}",
+      "enabled": true,
+      "openai_base_url": "https://api.deepseek.com/v1"
+    },
+    {
+      "name": "gpt-4-turbo",
+      "basemodel": "gpt-4-turbo",
+      "signature": "gpt-4-turbo-futures",
+      "enabled": false
+    },
+    {
+      "name": "claude-3.5-sonnet",
+      "basemodel": "anthropic/claude-3.5-sonnet",
+      "signature": "claude-futures-trader",
+      "enabled": false
+    }
+  ],
+  "agent_config": {
+    "max_steps": 30,
+    "max_retries": 3,
+    "base_delay": 1.0,
+    "initial_cash": 100000.0,
+    "futures_trading": true,
+    "description": "Futures trading for NQ1! (Nasdaq-100 Mini Futures) using intraday 3-minute data"
+  },
+  "log_config": {
+    "log_path": "./data/agent_data",
+    "log_prefix": "futures"
+  }
+}
