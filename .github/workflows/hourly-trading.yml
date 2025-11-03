@@ -178,6 +178,7 @@ jobs:
             -e ASSET_TYPE="${{ github.event.inputs.asset_type || 'crypto' }}" \
             -e TRADING_SYMBOLS="${{ github.event.inputs.symbols || 'BTC,ETH' }}" \
             -e AGENT_MAX_STEP="${{ env.AGENT_MAX_STEP }}" \
+            -e RUNTIME_ENV_PATH="/app/.runtime_env.json" \
             -e PYTHONUNBUFFERED=1 \
             -e GITHUB_ACTIONS=true \
             "$AGENT_RUNNER_CONTAINER_NAME" \
