@@ -120,6 +120,12 @@ async def main(config_path=None):
         END_DATE = os.getenv("END_DATE")
         print(f"⚠️  Using environment variable to override END_DATE: {END_DATE}")
 
+    # Dynamic date handling
+    if INIT_DATE == "TODAY-7":
+        INIT_DATE = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    if END_DATE == "TODAY":
+        END_DATE = datetime.now().strftime("%Y-%m-%d")
+
     # Validate date range
     INIT_DATE_obj = datetime.strptime(INIT_DATE, "%Y-%m-%d").date()
     END_DATE_obj = datetime.strptime(END_DATE, "%Y-%m-%d").date()

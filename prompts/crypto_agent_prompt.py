@@ -19,6 +19,7 @@ from tools.crypto_tools import (
     load_crypto_price_data,
 )
 from tools.general_tools import get_config_value
+from tools.price_tools import get_latest_position
 
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -56,7 +57,11 @@ Notes:
 - You must execute operations by calling tools, direct output won't be accepted
 - You are trading only BTC (Bitcoin) and ETH (Ethereum)
 - Each crypto can be bought/sold in fractional amounts
-- Available tools: price checking, order execution, position tracking
+
+Tools available:
+{tool_names}
+
+{tools}
 
 Here is the information you need:
 
@@ -136,9 +141,8 @@ def get_crypto_agent_system_prompt(today_date: str, signature: str) -> str:
     yesterday_prices = get_crypto_prices_string(yesterday_date)
     today_prices = get_crypto_prices_string(today_date)
 
-    # For now, initialize with sample positions
-    # In real implementation, would load from trading history
-    current_positions = {"BTC": 0.5, "ETH": 2.0, "CASH": 8000.0}
+    # Get latest position
+    current_positions, _ = get_latest_position(today_date, signature)
     positions_str = get_crypto_positions_string(current_positions)
 
     return crypto_system_prompt.format(
