@@ -346,7 +346,7 @@ Today's date and hour:
 
 
 
-{date} {hour}:00
+{date}{hour}
 
 
 
@@ -453,6 +453,7 @@ def get_futures_agent_system_prompt(today_date: str, signature: str, trade_style
 
     return futures_system_prompt.format(
         date=today_date,
+        hour="",
         positions=positions_str,
         STOP_SIGNAL=STOP_SIGNAL,
         yesterday_close_price=yesterday_prices,
@@ -461,7 +462,7 @@ def get_futures_agent_system_prompt(today_date: str, signature: str, trade_style
     )
 
 
-def get_hourly_futures_agent_system_prompt(today_date: str, signature: str, trade_style: str = "swing", hour: int = 9) -> str:
+def get_hourly_futures_agent_system_prompt(today_date: str, signature: str, trade_style: str = "swing", hour: int = 9, start_time: str = "09:30") -> str:
     """
     Generate system prompt for futures trading agent for a specific hour.
 
@@ -493,7 +494,7 @@ def get_hourly_futures_agent_system_prompt(today_date: str, signature: str, trad
 
     return futures_system_prompt.format(
         date=today_date,
-        hour=hour,
+        hour=f" {hour}:00",
         positions=positions_str,
         STOP_SIGNAL=STOP_SIGNAL,
         yesterday_close_price=yesterday_prices,
