@@ -53,6 +53,7 @@ on:
     paths:
       - 'configs/**'
       - 'agent/**'
+      - 'agent_tools/**'
       - 'prompts/**'
       - 'data/**'
       - 'tools/**'
