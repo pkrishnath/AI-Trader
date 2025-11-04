@@ -171,7 +171,7 @@ async def main(config_path=None):
 
     # Run agent backtesting
     print("🚀 Starting trading experiment")
-    print(f"🤖 Agent type: {agent_class.__name__}")
+    print(f"🤖 Agent type: {AgentClass.__name__}")
     print(f"📅 Date range: {init_date} to {end_date}")
     print(f"🤖 Model list: {models}")
     print(
