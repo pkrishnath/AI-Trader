@@ -231,6 +231,10 @@ async def main(config_path=None):
             print(f"📊 Trading symbols: {len(trading_symbols)} NASDAQ 100 stocks (default)")
 
         try:
+            # Get trading style from environment or config (default: swing)
+            trade_style = os.getenv("TRADE_STYLE", "swing").lower()
+            print(f"💱 Trading style: {trade_style}")
+
             # Dynamically create Agent instance
             agent = AgentClass(
                 signature=signature,
@@ -245,6 +249,7 @@ async def main(config_path=None):
                 base_delay=base_delay,
                 initial_cash=initial_cash,
                 init_date=INIT_DATE,
+                trade_style=trade_style,
             )
 
             print(f"✅ {agent_type} instance created successfully: {agent}")

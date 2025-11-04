@@ -36,6 +36,15 @@ on:
           - gpt-4o
           - gpt-4-turbo
           - claude-3.5-sonnet
+      trade_style:
+        description: 'Trading style (swing, intraday, or scalp)'
+        required: true
+        default: 'swing'
+        type: choice
+        options:
+          - swing
+          - intraday
+          - scalp
 
   # Also run on push to main (optional)
   push:
@@ -197,6 +206,7 @@ jobs:
             -e LLM_MODEL="$LLM_MODEL" \
             -e ASSET_TYPE="${{ github.event.inputs.asset_type || 'crypto' }}" \
             -e TRADING_SYMBOLS="${{ github.event.inputs.symbols || 'BTC,ETH' }}" \
+            -e TRADE_STYLE="${{ github.event.inputs.trade_style || 'swing' }}" \
             -e AGENT_MAX_STEP="${{ env.AGENT_MAX_STEP }}" \
             -e RUNTIME_ENV_PATH="/app/.runtime_env.json" \
             -e PYTHONUNBUFFERED=1 \

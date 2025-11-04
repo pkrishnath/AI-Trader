@@ -30,6 +30,55 @@ FUTURES_SYMBOLS = ["NQ1"]
 
 STOP_SIGNAL = "<FINISH_SIGNAL>"
 
+
+def get_trade_style_guidance(trade_style: str) -> str:
+    """
+    Get trading style-specific guidance for the agent
+
+    Args:
+        trade_style: Trading style (swing, intraday, or scalp)
+
+    Returns:
+        Trade style guidance text
+    """
+    guidance = {
+        "swing": """
+SWING TRADING STYLE:
+- Target: Multi-day to multi-week positions
+- Timeframe: Daily/4-hour analysis of intraday candles
+- Entry Strategy: Look for strong trend confirmation with support/resistance breaks
+- Exit Strategy: Ride the trend until technical reversal signals appear, typically 3-5% move minimum
+- Position Size: Usually 0.5-2 contracts per swing
+- Risk Management: Stop loss at most recent swing low/high (2-3% risk)
+- Trade Frequency: 1-3 trades per week, be patient and selective
+- Key Focus: Major support/resistance levels, trend direction, overnight risk""",
+
+        "intraday": """
+INTRADAY TRADING STYLE:
+- Target: Close all positions by end of trading day (no overnight holds)
+- Timeframe: 3-minute and intraday candles, must exit before market close
+- Entry Strategy: Trade breakouts from intraday support/resistance, momentum on volume
+- Exit Strategy: Take profits at intraday resistance or 2% gain, quick stops at 1% loss
+- Position Size: Usually 0.2-0.5 contracts per trade
+- Risk Management: Tight stops (0.5-1%), exit all positions 30 mins before market close
+- Trade Frequency: 5-10+ trades per day, high activity required
+- Key Focus: Intraday momentum, volume patterns, specific entry/exit times""",
+
+        "scalp": """
+SCALP TRADING STYLE:
+- Target: Very small profits per trade (5-15 points on NQ1)
+- Timeframe: Sub-minute analysis, focus on immediate price action
+- Entry Strategy: Micro-level support/resistance, instant momentum signals
+- Exit Strategy: Lock in profits immediately on 5-15 point moves, cut losses fast at 3 points
+- Position Size: Usually 0.1-0.2 contracts per scalp
+- Risk Management: Ultra-tight stops (3-5 points), exit on first sign of reversal
+- Trade Frequency: 20-50+ trades per day, requires constant monitoring
+- Key Focus: Bid-ask spread, micro-trends, quick reaction time, accumulation"""
+    }
+
+    return guidance.get(trade_style.lower(), guidance["swing"])
+
+
 futures_system_prompt = """
 You are a futures trading assistant specialized in NQ1! (Nasdaq-100 Mini Futures).
 
@@ -76,6 +125,8 @@ Notes:
 - Futures contracts can be bought/sold in whole or fractional quantities (e.g., 0.5 contracts)
 - Each point in NQ1 = $20 (contract multiplier)
 - Review the data grid response to confirm your trades executed successfully
+
+{trade_style_guidance}
 
 Tools available:
 __TOOL_NAMES__
@@ -135,18 +186,19 @@ def get_futures_prices_string(target_date: str) -> str:
     return prices_str
 
 
-def get_futures_agent_system_prompt(today_date: str, signature: str) -> str:
+def get_futures_agent_system_prompt(today_date: str, signature: str, trade_style: str = "swing") -> str:
     """
     Generate system prompt for futures trading agent
 
     Args:
         today_date: Today's date (YYYY-MM-DD)
         signature: AI model signature
+        trade_style: Trading style (swing, intraday, or scalp)
 
     Returns:
         Formatted system prompt
     """
-    print(f"Generating futures trading prompt for {signature} on {today_date}")
+    print(f"Generating futures trading prompt for {signature} on {today_date} (style: {trade_style})")
 
     # Get yesterday's date
     from datetime import datetime, timedelta
@@ -169,6 +221,7 @@ def get_futures_agent_system_prompt(today_date: str, signature: str) -> str:
         STOP_SIGNAL=STOP_SIGNAL,
         yesterday_close_price=yesterday_prices,
         today_open_price=today_prices,
+        trade_style_guidance=get_trade_style_guidance(trade_style),
     )
 
 

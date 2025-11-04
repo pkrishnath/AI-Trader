@@ -170,6 +170,7 @@ class BaseAgent:
         openai_api_key: Optional[str] = None,
         initial_cash: float = 10000.0,
         init_date: str = "2025-10-13",
+        trade_style: str = "swing",
     ):
         """
         Initialize BaseAgent
@@ -192,6 +193,7 @@ class BaseAgent:
         self.basemodel = basemodel
         self.asset_type = asset_type
         self.stock_symbols = stock_symbols or self.DEFAULT_STOCK_SYMBOLS
+        self.trade_style = trade_style.lower() if trade_style else "swing"
         self.max_steps = max_steps
         self.max_retries = max_retries
         self.base_delay = base_delay
@@ -495,7 +497,7 @@ class BaseAgent:
             system_prompt = system_prompt.replace("__TOOL_NAMES__", "{tool_names}")
             system_prompt = system_prompt.replace("__TOOLS__", "{tools}")
         elif self.asset_type == "futures":
-            system_prompt = get_futures_agent_system_prompt(today_date, self.signature)
+            system_prompt = get_futures_agent_system_prompt(today_date, self.signature, self.trade_style)
             system_prompt = system_prompt.replace("__TOOL_NAMES__", "{tool_names}")
             system_prompt = system_prompt.replace("__TOOLS__", "{tools}")
         else:
