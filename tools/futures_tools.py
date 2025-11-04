@@ -76,6 +76,63 @@ def get_futures_price_on_date(
 
     return None
 
+def get_futures_price_at_time(
+    futures_symbol: str, target_date: str, target_time: str, price_type: str = "close"
+) -> Optional[float]:
+    """
+    Get the futures price at a specific time on a specific date.
+
+    Args:
+        futures_symbol: Futures symbol (NQ1, ES, etc.)
+        target_date: Date string (YYYY-MM-DD)
+        target_time: Time string (HH:MM)
+        price_type: Type of price (open, close, high, low)
+
+    Returns:
+        Price value or None if not found
+    """
+    data = load_futures_price_data(futures_symbol)
+
+    target_datetime_str = f"{target_date} {target_time}:00"
+    if target_datetime_str in data:
+        return data[target_datetime_str].get(price_type)
+
+    # If exact time not found, find the closest available time
+    target_dt = datetime.strptime(target_datetime_str, "%Y-%m-%d %H:%M:%S")
+    closest_dt = None
+    min_diff = float('inf')
+
+    for dt_str in data.keys():
+        if dt_str.startswith(target_date):
+            dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
+            diff = abs((dt - target_dt).total_seconds())
+            if diff < min_diff:
+                min_diff = diff
+                closest_dt = dt
+
+    if closest_dt:
+        return data[closest_dt.strftime("%Y-%m-%d %H:%M:%S")].get(price_type)
+
+    return None
+
+
+def get_futures_price_on_date(
+    futures_symbol: str, target_date: str, price_type: str = "close"
+) -> Optional[float]:
+    """
+    Get the latest futures price on a specific date.
+
+    Args:
+        futures_symbol: Futures symbol (NQ1, ES, etc.)
+        target_date: Date string (YYYY-MM-DD)
+        price_type: Type of price (open, close, high, low)
+
+    Returns:
+        Price value or None if not found
+    """
+    return get_futures_price_at_time(futures_symbol, target_date, "23:59", price_type)
+
+
 def format_futures_price_data(futures_symbol: str, target_date: str) -> str:
     """
     Format futures price data for display in agent prompt.
@@ -90,10 +147,22 @@ def format_futures_price_data(futures_symbol: str, target_date: str) -> str:
     data = load_futures_price_data(futures_symbol)
 
     formatted_prices = []
+    hourly_prices = {}
+
     for dt_str, price_data in sorted(data.items()):
         if dt_str.startswith(target_date):
-            prices = price_data
-            formatted_prices.append(f"""{futures_symbol} ({prices.get('date')}):\n  Open:  ${prices.get('open', 'N/A'):,.2f}\n  High:  ${prices.get('high', 'N/A'):,.2f}\n  Low:   ${prices.get('low', 'N/A'):,.2f}\n  Close: ${prices.get('close', 'N/A'):,.2f}""")
+            hour = dt_str[11:13]
+            if hour not in hourly_prices:
+                hourly_prices[hour] = price_data
+
+    for hour, prices in sorted(hourly_prices.items()):
+        formatted_prices.append(
+            f'''{futures_symbol} ({prices.get('date')}):
+  Open:  ${prices.get('open', 'N/A'):,.2f}
+  High:  ${prices.get('high', 'N/A'):,.2f}
+  Low:   ${prices.get('low', 'N/A'):,.2f}
+  Close: ${prices.get('close', 'N/A'):,.2f}'''
+        )
 
     if formatted_prices:
         return "\n".join(formatted_prices)
