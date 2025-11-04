@@ -19,7 +19,7 @@ from langchain_openai import ChatOpenAI
 
 from prompts.agent_prompt import STOP_SIGNAL, get_agent_system_prompt
 from prompts.crypto_agent_prompt import get_crypto_agent_system_prompt
-from prompts.futures_agent_prompt import get_futures_agent_system_prompt
+from prompts.futures_agent_prompt import get_futures_agent_system_prompt, get_hourly_futures_agent_system_prompt
 from tools.enhanced_logging import get_logger
 from tools.general_tools import (
     extract_conversation,
