@@ -263,8 +263,15 @@ async def main(config_path=None):
             await agent.initialize()
             print("✅ Initialization successful")
             # Run all trading days in date range
-            print(f"Calling run_date_range with start_time={start_time} and end_time={end_time}")
-            await agent.run_date_range(INIT_DATE, END_DATE)
+            print(f"🔄 About to call run_date_range...")
+            try:
+                print(f"📝 start_time={start_time}, end_time={end_time}, INIT_DATE={INIT_DATE}, END_DATE={END_DATE}")
+                await agent.run_date_range(INIT_DATE, END_DATE)
+            except NameError as ne:
+                print(f"🔥 NameError caught in run_date_range: {ne}")
+                import traceback
+                traceback.print_exc()
+                raise
 
             # Display final position summary
             summary = agent.get_position_summary()
