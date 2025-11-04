@@ -166,12 +166,20 @@ async def main(config_path=None):
     # Display enabled model information
     model_names = [m.get("name", m.get("signature")) for m in enabled_models]
 
+    start_time = os.getenv("START_TIME", "09:30")
+    end_time = os.getenv("END_TIME", "16:00")
+
+    # Run agent backtesting
     print("🚀 Starting trading experiment")
-    print(f"🤖 Agent type: {agent_type}")
-    print(f"📅 Date range: {INIT_DATE} to {END_DATE}")
-    print(f"🤖 Model list: {model_names}")
+    print(f"🤖 Agent type: {agent_class.__name__}")
+    print(f"📅 Date range: {init_date} to {end_date}")
+    print(f"🤖 Model list: {models}")
     print(
         f"⚙️  Agent config: max_steps={max_steps}, max_retries={max_retries}, base_delay={base_delay}, initial_cash={initial_cash}"
+    )
+
+    asyncio.run(
+        agent.run_date_range(init_date, end_date, start_time, end_time)
     )
 
     for model_config in enabled_models:
