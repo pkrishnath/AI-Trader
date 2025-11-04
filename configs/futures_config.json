@@ -3,8 +3,12 @@
   "futures_mode": true,
   "trading_universe": ["NQ1"],
   "date_range": {
-    "init_date": "TODAY-7",
-    "end_date": "TODAY-1"
+    "init_date": "TODAY",
+    "end_date": "TODAY"
+  },
+  "trading_session": {
+    "start_time": "09:30",
+    "end_time": "02:00"
   },
   "models": [
     {
@@ -39,6 +43,7 @@
     "max_retries": 3,
     "base_delay": 1.0,
     "initial_cash": 100000.0,
+    "trade_style": "intraday",
     "futures_trading": true,
     "description": "Futures trading for NQ1! (Nasdaq-100 Mini Futures) using intraday 3-minute data"
   },

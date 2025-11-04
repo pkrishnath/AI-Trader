@@ -1,11 +1,7 @@
 name: Hourly AI Trading Run
 
 on:
-  schedule:
-    # Run every hour at minute 0
-    - cron: '0 * * * *'
-
-  # Allow manual trigger from GitHub UI
+  # Manual trigger only
   workflow_dispatch:
     inputs:
       config_file:
@@ -53,21 +49,6 @@ on:
         description: 'End time for the trading session (HH:MM)'
         required: false
         default: '16:00'
-
-  # Also run on push to main (optional)
-  push:
-    branches:
-      - main
-    paths:
-      - 'configs/**'
-      - 'agent/**'
-      - 'agent_tools/**'
-      - 'prompts/**'
-      - 'data/**'
-      - 'tools/**'
-      - 'main.py'
-      - '.github/workflows/hourly-trading.yml'
-      - 'docker-compose.yml'
 
 jobs:
   trading-run:
