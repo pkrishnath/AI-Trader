@@ -280,11 +280,13 @@ async def main(config_path=None):
             print(f"📋 Error details: {e}")
             # Print full traceback for debugging
             import traceback
+            import sys
             print("\n📋 Full traceback:")
-            traceback.print_exc()
+            traceback.print_exc(file=sys.stdout)
+            sys.stdout.flush()
             # Can choose to continue processing next model, or exit
             # continue  # Continue processing next model
-            exit()  # Or exit program
+            exit(1)  # Or exit program
 
         print("=" * 60)
         print(f"✅ Model {model_name} ({signature}) processing completed")
