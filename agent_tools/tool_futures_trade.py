@@ -313,7 +313,7 @@ def sell_futures(futures_symbol: str, contracts: float) -> Dict[str, Any]:
 if __name__ == "__main__":
     port = int(os.getenv("FUTURES_TRADE_HTTP_PORT", 8005))
     try:
-        mcp.run(port=port)
+        mcp.run(transport="streamable-http", host="0.0.0.0", port=port)
     except Exception as e:
         print(f"Error running futures trade service: {e}")
         raise
