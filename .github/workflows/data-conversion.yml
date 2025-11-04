@@ -1,0 +1,151 @@
+name: Data Conversion Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      asset_type:
+        description: 'Asset type (crypto, futures, or stock)'
+        required: true
+        default: 'futures'
+        type: choice
+        options:
+          - crypto
+          - futures
+          - stock
+      symbols:
+        description: 'Comma-separated symbols (e.g., NQ1 or BTC,ETH)'
+        required: true
+        default: 'NQ1'
+
+  # Also trigger on any CSV file changes in tv_data
+  push:
+    paths:
+      - 'tv_data/**/*.csv'
+
+jobs:
+  convert-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check for CSV files in tv_data/
+        run: |
+          echo "📁 Checking tv_data/ directory..."
+          if [ -d "tv_data" ]; then
+            CSV_COUNT=$(find tv_data -name "*.csv" -type f | wc -l)
+            echo "Found $CSV_COUNT CSV file(s)"
+            if [ $CSV_COUNT -gt 0 ]; then
+              echo "CSV Files:"
+              find tv_data -name "*.csv" -type f -exec ls -lh {} \;
+            fi
+          else
+            echo "❌ tv_data/ directory not found"
+            exit 1
+          fi
+
+      - name: Run data conversion pipeline
+        run: |
+          echo "🔄 Converting CSV to JSON format..."
+          cd data
+          ASSET_TYPE="${{ github.event.inputs.asset_type || 'futures' }}"
+          SYMBOLS="${{ github.event.inputs.symbols || 'NQ1' }}"
+
+          echo "📝 Parameters:"
+          echo "   Asset Type: $ASSET_TYPE"
+          echo "   Symbols: $SYMBOLS"
+          echo ""
+
+          python get_data.py --asset-type "$ASSET_TYPE" --symbols "$SYMBOLS"
+          cd ..
+
+      - name: Validate converted JSON files
+        run: |
+          echo "✅ Validating converted JSON files..."
+          python3 << 'EOF'
+          import json
+          import glob
+          from pathlib import Path
+
+          converted_files = []
+
+          # Check for crypto prices
+          crypto_files = glob.glob("crypto_prices_*.json")
+          for f in crypto_files:
+              try:
+                  with open(f) as file:
+                      data = json.load(file)
+                  keys = sorted(data.keys())
+                  print(f"\n✓ {f}")
+                  print(f"  Records: {len(data)}")
+                  print(f"  First: {keys[0]}")
+                  print(f"  Last: {keys[-1]}")
+                  converted_files.append(f)
+              except Exception as e:
+                  print(f"✗ {f}: {e}")
+
+          # Check for future prices
+          future_files = glob.glob("data/future_prices_*.json")
+          for f in future_files:
+              try:
+                  with open(f) as file:
+                      data = json.load(file)
+                  keys = sorted(data.keys())
+                  print(f"\n✓ {f}")
+                  print(f"  Records: {len(data)}")
+                  print(f"  First: {keys[0]}")
+                  print(f"  Last: {keys[-1]}")
+                  converted_files.append(f)
+              except Exception as e:
+                  print(f"✗ {f}: {e}")
+
+          if not converted_files:
+              print("\n⚠️  No converted JSON files found")
+          else:
+              print(f"\n✅ Successfully validated {len(converted_files)} file(s)")
+          EOF
+
+      - name: Upload converted data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: converted-data-${{ github.run_id }}
+          path: |
+            crypto_prices_*.json
+            data/future_prices_*.json
+          retention-days: 30
+
+      - name: Generate conversion report
+        if: always()
+        run: |
+          echo "# Data Conversion Report" > conversion_report.md
+          echo "**Timestamp:** $(date -u)" >> conversion_report.md
+          echo "**Asset Type:** ${{ github.event.inputs.asset_type || 'futures' }}" >> conversion_report.md
+          echo "**Symbols:** ${{ github.event.inputs.symbols || 'NQ1' }}" >> conversion_report.md
+          echo "" >> conversion_report.md
+          echo "## Status" >> conversion_report.md
+          echo "✅ Data conversion completed" >> conversion_report.md
+          echo "" >> conversion_report.md
+          echo "## Converted Files" >> conversion_report.md
+          if [ -d "tv_data" ]; then
+            echo "- CSV Source: \`tv_data/\`" >> conversion_report.md
+            find tv_data -name "*.csv" -type f -exec echo "  - {}" >> conversion_report.md \;
+          fi
+          echo "" >> conversion_report.md
+          echo "- JSON Output available in artifacts" >> conversion_report.md
+          cat conversion_report.md
+          echo ""
+          echo "✅ Data conversion pipeline complete!"
