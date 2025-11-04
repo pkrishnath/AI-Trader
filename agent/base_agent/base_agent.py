@@ -171,6 +171,8 @@ class BaseAgent:
         initial_cash: float = 10000.0,
         init_date: str = "2025-10-13",
         trade_style: str = "swing",
+        start_time: str = "09:30",
+        end_time: str = "16:00",
     ):
         """
         Initialize BaseAgent
@@ -199,6 +201,8 @@ class BaseAgent:
         self.base_delay = base_delay
         self.initial_cash = initial_cash
         self.init_date = init_date
+        self.start_time = start_time
+        self.end_time = end_time
 
         # Set MCP configuration
         self.mcp_config = mcp_config or self._get_default_mcp_config()
@@ -746,7 +750,7 @@ class BaseAgent:
             system_prompt = system_prompt.replace("__TOOL_NAMES__", "{tool_names}")
             system_prompt = system_prompt.replace("__TOOLS__", "{tools}")
         elif self.asset_type == "futures":
-            system_prompt = get_hourly_futures_agent_system_prompt(today_date, self.signature, self.trade_style, hour)
+            system_prompt = get_hourly_futures_agent_system_prompt(today_date, self.signature, self.trade_style, hour, self.start_time)
             system_prompt = system_prompt.replace("__TOOL_NAMES__", "{tool_names}")
             system_prompt = system_prompt.replace("__TOOLS__", "{tools}")
         else:
@@ -852,7 +856,7 @@ class BaseAgent:
             total_tokens=0  # Will be populated from API calls
         )
 
-    async def run_date_range(self, init_date: str, end_date: str, start_time: str = "09:30", end_time: str = "16:00") -> None:
+    async def run_date_range(self, init_date: str, end_date: str) -> None:
         """
         Run all trading days in date range
 
@@ -873,8 +877,8 @@ class BaseAgent:
 
         print(f"📊 Trading days to process: {trading_dates}")
 
-        start_hour = int(start_time.split(":")[0])
-        end_hour = int(end_time.split(":")[0])
+        start_hour = int(self.start_time.split(":")[0])
+        end_hour = int(self.end_time.split(":")[0])
 
         # Process each trading day
         for date in trading_dates:
