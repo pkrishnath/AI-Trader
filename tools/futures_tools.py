@@ -147,22 +147,16 @@ def format_futures_price_data(futures_symbol: str, target_date: str) -> str:
     data = load_futures_price_data(futures_symbol)
 
     formatted_prices = []
-    hourly_prices = {}
-
     for dt_str, price_data in sorted(data.items()):
         if dt_str.startswith(target_date):
-            hour = dt_str[11:13]
-            if hour not in hourly_prices:
-                hourly_prices[hour] = price_data
-
-    for hour, prices in sorted(hourly_prices.items()):
-        formatted_prices.append(
-            f'''{futures_symbol} ({prices.get('date')}):
+            prices = price_data
+            formatted_prices.append(
+                f'''{futures_symbol} ({prices.get('date')}):
   Open:  ${prices.get('open', 'N/A'):,.2f}
   High:  ${prices.get('high', 'N/A'):,.2f}
   Low:   ${prices.get('low', 'N/A'):,.2f}
   Close: ${prices.get('close', 'N/A'):,.2f}'''
-        )
+            )
 
     if formatted_prices:
         return "\n".join(formatted_prices)
