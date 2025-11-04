@@ -143,6 +143,16 @@ async def main(config_path=None):
         print("❌ INIT_DATE is greater than END_DATE")
         exit(1)
 
+    # Get trading session times
+    trading_session_config = config.get("trading_session", {})
+    start_time = os.getenv("START_TIME", trading_session_config.get("start_time", "09:30"))
+    end_time = os.getenv("END_TIME", trading_session_config.get("end_time", "16:00"))
+
+    if os.getenv("START_TIME"):
+        print(f"⚠️  Using environment variable to override start_time: {start_time}")
+    if os.getenv("END_TIME"):
+        print(f"⚠️  Using environment variable to override end_time: {end_time}")
+
     # Get model list from configuration file (only select enabled models)
     enabled_models = [model for model in config["models"] if model.get("enabled", True)]
 
@@ -243,6 +253,8 @@ async def main(config_path=None):
                 initial_cash=initial_cash,
                 init_date=INIT_DATE,
                 trade_style=trade_style,
+                start_time=start_time,
+                end_time=end_time,
             )
 
             print(f"✅ {agent_type} instance created successfully: {agent}")
@@ -251,7 +263,8 @@ async def main(config_path=None):
             await agent.initialize()
             print("✅ Initialization successful")
             # Run all trading days in date range
-            await agent.run_date_range(INIT_DATE, END_DATE, start_time, end_time)
+            print(f"Calling run_date_range with start_time={start_time} and end_time={end_time}")
+            await agent.run_date_range(INIT_DATE, END_DATE)
 
             # Display final position summary
             summary = agent.get_position_summary()
@@ -265,6 +278,10 @@ async def main(config_path=None):
         except Exception as e:
             print(f"❌ Error processing model {model_name} ({signature}): {str(e)}")
             print(f"📋 Error details: {e}")
+            # Print full traceback for debugging
+            import traceback
+            print("\n📋 Full traceback:")
+            traceback.print_exc()
             # Can choose to continue processing next model, or exit
             # continue  # Continue processing next model
             exit()  # Or exit program
