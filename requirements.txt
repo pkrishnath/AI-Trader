@@ -6,3 +6,4 @@ fastmcp==2.12.5
 starlette
 uvicorn
 python-dotenv
+requests

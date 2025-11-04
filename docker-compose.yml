@@ -1,3 +1,4 @@
+# Trigger workflow
 services:
   # Math MCP Service
   math-service:
