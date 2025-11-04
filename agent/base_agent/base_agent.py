@@ -254,8 +254,28 @@ class BaseAgent:
         """Get default MCP configuration"""
         if os.getenv("GITHUB_ACTIONS") == "true":
             # Use service names for GitHub Actions environment
-            if self.asset_type == "crypto" or self.asset_type == "futures":
-                # Futures and crypto both use prices-service and crypto-trade-service
+            if self.asset_type == "futures":
+                # Futures uses prices-service and futures-trade-service
+                return {
+                    "math": {
+                        "transport": "streamable_http",
+                        "url": f"http://math-service:{os.getenv('MATH_HTTP_PORT', '8000')}/mcp",
+                    },
+                    "crypto_local": {
+                        "transport": "streamable_http",
+                        "url": f"http://prices-service:{os.getenv('GETPRICE_HTTP_PORT', '8003')}/mcp",
+                    },
+                    "search": {
+                        "transport": "streamable_http",
+                        "url": f"http://search-service:{os.getenv('SEARCH_HTTP_PORT', '8001')}/mcp",
+                    },
+                    "futures_trade": {
+                        "transport": "streamable_http",
+                        "url": f"http://futures-trade-service:{os.getenv('FUTURES_TRADE_HTTP_PORT', '8005')}/mcp",
+                    },
+                }
+            elif self.asset_type == "crypto":
+                # Crypto uses prices-service and crypto-trade-service
                 return {
                     "math": {
                         "transport": "streamable_http",
@@ -295,8 +315,28 @@ class BaseAgent:
                 }
         else:
             # Use host.docker.internal for local development
-            if self.asset_type == "crypto" or self.asset_type == "futures":
-                # Futures and crypto both use prices-service and crypto-trade-service
+            if self.asset_type == "futures":
+                # Futures uses prices-service and futures-trade-service
+                return {
+                    "math": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('MATH_HTTP_PORT', '8000')}/mcp",
+                    },
+                    "crypto_local": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('GETPRICE_HTTP_PORT', '8003')}/mcp",
+                    },
+                    "search": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('SEARCH_HTTP_PORT', '8001')}/mcp",
+                    },
+                    "futures_trade": {
+                        "transport": "streamable_http",
+                        "url": f"http://host.docker.internal:{os.getenv('FUTURES_TRADE_HTTP_PORT', '8005')}/mcp",
+                    },
+                }
+            elif self.asset_type == "crypto":
+                # Crypto uses prices-service and crypto-trade-service
                 return {
                     "math": {
                         "transport": "streamable_http",

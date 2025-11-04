@@ -104,6 +104,28 @@ services:
       retries: 5
       start_period: 15s
 
+  futures-trade-service:
+    build:
+      context: .
+      dockerfile: agent_tools/Dockerfile.futures_trade
+    ports:
+      - "8005:8005"
+    environment:
+      - FUTURES_TRADE_HTTP_PORT=8005
+      - PYTHONPATH=/app
+      - SIGNATURE=${SIGNATURE}
+      - RUNTIME_ENV_PATH=/app/.runtime_env.json
+    networks:
+      - mcp-network
+    volumes:
+      - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
   agent-runner:
     container_name: agent-runner-container
     build:
@@ -129,6 +151,8 @@ services:
       trade-service:
         condition: service_healthy
       crypto-trade-service:
+        condition: service_healthy
+      futures-trade-service:
         condition: service_healthy
       prices-service:
         condition: service_healthy
