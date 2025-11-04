@@ -311,4 +311,5 @@ def sell_futures(futures_symbol: str, contracts: float) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    mcp.run()
+    port = int(os.getenv("FUTURES_TRADE_HTTP_PORT", 8005))
+    mcp.run(port=port)
