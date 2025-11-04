@@ -11,7 +11,7 @@ on:
       config_file:
         description: 'Config file to use (crypto, futures, or stock)'
         required: true
-        default: 'crypto'
+        default: 'futures'
         type: choice
         options:
           - crypto
@@ -20,11 +20,11 @@ on:
       asset_type:
         description: 'Type of asset to trade (crypto or stock)'
         required: true
-        default: 'crypto'
+        default: 'futures'
       symbols:
         description: 'Comma-separated list of symbols to trade'
         required: true
-        default: 'BTC,ETH'
+        default: 'NQ1'
       llm_model:
         description: 'LLM model to use for trading agent'
         required: true
@@ -39,7 +39,7 @@ on:
       trade_style:
         description: 'Trading style (swing, intraday, or scalp)'
         required: true
-        default: 'swing'
+        default: 'intraday'
         type: choice
         options:
           - swing
