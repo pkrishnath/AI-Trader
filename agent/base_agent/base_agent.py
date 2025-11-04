@@ -722,6 +722,136 @@ class BaseAgent:
                     print(f"⏳ Waiting {wait_time} seconds before retry...")
                     await asyncio.sleep(wait_time)
 
+    async def run_hourly_trading_session(self, today_date: str, hour: int) -> None:
+        """
+        Run single hour trading session
+
+        Args:
+            today_date: Trading date
+            hour: Trading hour
+        """
+        # Initialize enhanced logger
+        logger = get_logger()
+        logger.header(f"Trading Session: {today_date} {hour}:00")
+        logger.info(f"Trading {len(self.stock_symbols)} assets: {', '.join(self.stock_symbols)}")
+
+        print(f"📈 Starting trading session: {today_date} {hour}:00")
+
+        # Set up logging
+        log_file = self._setup_logging(f"{today_date}_{hour}")
+
+        # Update system prompt
+        if self.asset_type == "crypto":
+            system_prompt = get_crypto_agent_system_prompt(today_date, self.signature)
+            system_prompt = system_prompt.replace("__TOOL_NAMES__", "{tool_names}")
+            system_prompt = system_prompt.replace("__TOOLS__", "{tools}")
+        elif self.asset_type == "futures":
+            system_prompt = get_hourly_futures_agent_system_prompt(today_date, self.signature, self.trade_style, hour)
+            system_prompt = system_prompt.replace("__TOOL_NAMES__", "{tool_names}")
+            system_prompt = system_prompt.replace("__TOOLS__", "{tools}")
+        else:
+            system_prompt = get_agent_system_prompt(today_date, self.signature)
+
+        self.agent = create_agent(
+            self.model,
+            tools=self.tools,
+            system_prompt=system_prompt,
+        )
+
+        # Initial user query
+        user_query = [
+            {
+                "role": "user",
+                "content": f"Please analyze and update today's ({today_date}) positions for the {hour}:00 hour.",
+            }
+        ]
+        message = user_query.copy()
+
+        # Log initial message
+        self._log_message(log_file, user_query)
+
+        # Trading loop
+        current_step = 0
+        total_trades = 0
+        while current_step < self.max_steps:
+            current_step += 1
+            logger.step(current_step, self.max_steps)
+            print(f"\n{'='*70}")
+            print(f"🔄 STEP {current_step}/{self.max_steps}")
+            print(f"{'='*70}")
+
+            try:
+                # Call agent
+                response = await self._ainvoke_with_retry(message)
+
+                # Extract agent response
+                agent_response = extract_conversation(response, "final")
+
+                # Log agent thinking
+                if agent_response:
+                    logger.thinking(agent_response)
+                    print("\n📝 Agent Response Summary:")
+                    # Show first 200 chars of response
+                    summary = agent_response[:300] + ("..." if len(agent_response) > 300 else "")
+                    print(f"   {summary}")
+
+                # Check stop signal
+                if STOP_SIGNAL in agent_response:
+                    logger.success("Stop signal detected, trading session ended")
+                    print("✅ Received stop signal, trading session ended")
+                    print(agent_response)
+                    self._log_message(
+                        log_file, [{"role": "assistant", "content": agent_response}]
+                    )
+                    break
+
+                # Extract tool messages
+                tool_msgs = extract_tool_messages(response)
+
+                # Log tool results
+                if tool_msgs:
+                    print(f"\n🔧 Tool Results ({len(tool_msgs)} tools called):")
+                    for i, msg in enumerate(tool_msgs, 1):
+                        content = msg.content if hasattr(msg, 'content') else str(msg)
+                        print(f"   [{i}] {content[:200]}..." if len(content) > 200 else f"   [{i}] {content}")
+                        logger.tool_result("Agent Tool", content, success=True)
+                else:
+                    print("\n   ℹ️  No tool calls in this step")
+
+                tool_response = "\n".join([msg.content for msg in tool_msgs])
+
+                # Prepare new messages
+                new_messages = [
+                    {"role": "assistant", "content": agent_response},
+                    {"role": "user", "content": f"Tool results: {tool_response}"},
+                ]
+
+                # Add new messages
+                message.extend(new_messages)
+
+                # Log messages
+                self._log_message(log_file, new_messages[0])
+                self._log_message(log_file, new_messages[1])
+
+            except Exception as e:
+                logger.error(f"Trading step {current_step} failed: {str(e)}", "TradingStepError")
+                print(f"❌ Trading session error: {str(e)}")
+                print(f"Error details: {e}")
+                raise
+
+        # Handle trading results
+        await self._handle_trading_result(today_date)
+
+        # Log session summary
+        logger.execution_summary(
+            date=today_date,
+            status="success",
+            trades_made=total_trades,
+            p_and_l=0.0,  # Calculate from position file if available
+            total_cost=0.0,  # Will be populated from API calls
+            total_tokens=0  # Will be populated from API calls
+        )
+
     async def run_date_range(self, init_date: str, end_date: str) -> None:
         """
         Run all trading days in date range
@@ -743,18 +873,19 @@ class BaseAgent:
 
         # Process each trading day
         for date in trading_dates:
-            print(f"🔄 Processing {self.signature} - Date: {date}")
+            for hour in range(9, 17):
+                print(f"🔄 Processing {self.signature} - Date: {date} Hour: {hour}")
 
-            # Set configuration
-            write_config_value("TODAY_DATE", date)
-            write_config_value("SIGNATURE", self.signature)
+                # Set configuration
+                write_config_value("TODAY_DATE", date)
+                write_config_value("SIGNATURE", self.signature)
 
-            try:
-                await self.run_with_retry(date)
-            except Exception as e:
-                print(f"❌ Error processing {self.signature} - Date: {date}")
-                print(e)
-                raise
+                try:
+                    await self.run_hourly_trading_session(date, hour)
+                except Exception as e:
+                    print(f"❌ Error processing {self.signature} - Date: {date} Hour: {hour}")
+                    print(e)
+                    raise
 
         print(f"✅ {self.signature} processing completed")
 

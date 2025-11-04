@@ -340,10 +340,13 @@ Here is the information you need:
 
 
 
-Today's date:
+Today's date and hour:
 
 
-{date}
+
+
+
+{date} {hour}:00
 
 
 
@@ -450,6 +453,47 @@ def get_futures_agent_system_prompt(today_date: str, signature: str, trade_style
 
     return futures_system_prompt.format(
         date=today_date,
+        positions=positions_str,
+        STOP_SIGNAL=STOP_SIGNAL,
+        yesterday_close_price=yesterday_prices,
+        today_open_price=today_prices,
+        trade_style_guidance=get_trade_style_guidance(trade_style),
+    )
+
+
+def get_hourly_futures_agent_system_prompt(today_date: str, signature: str, trade_style: str = "swing", hour: int = 9) -> str:
+    """
+    Generate system prompt for futures trading agent for a specific hour.
+
+    Args:
+        today_date: Today's date (YYYY-MM-DD)
+        signature: AI model signature
+        trade_style: Trading style (swing, intraday, or scalp)
+        hour: The current hour of the trading day
+
+    Returns:
+        Formatted system prompt
+    """
+    print(f"Generating hourly futures trading prompt for {signature} on {today_date} at {hour}:00 (style: {trade_style})")
+
+    # Get yesterday's date
+    from datetime import datetime, timedelta
+
+    today = datetime.strptime(today_date, "%Y-%m-%d")
+    yesterday = today - timedelta(days=1)
+    yesterday_date = yesterday.strftime("%Y-%m-%d")
+
+    # Get prices
+    yesterday_prices = get_futures_prices_string(yesterday_date)
+    today_prices = get_futures_prices_string(today_date)
+
+    # Get latest position
+    current_positions, _ = get_latest_position(today_date, signature)
+    positions_str = get_futures_positions_string(current_positions)
+
+    return futures_system_prompt.format(
+        date=today_date,
+        hour=hour,
         positions=positions_str,
         STOP_SIGNAL=STOP_SIGNAL,
         yesterday_close_price=yesterday_prices,
