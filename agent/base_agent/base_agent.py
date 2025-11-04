@@ -852,13 +852,15 @@ class BaseAgent:
             total_tokens=0  # Will be populated from API calls
         )
 
-    async def run_date_range(self, init_date: str, end_date: str) -> None:
+    async def run_date_range(self, init_date: str, end_date: str, start_time: str = "09:30", end_time: str = "16:00") -> None:
         """
         Run all trading days in date range
 
         Args:
             init_date: Start date
             end_date: End date
+            start_time: Start time for the trading session (HH:MM)
+            end_time: End time for the trading session (HH:MM)
         """
         print(f"📅 Running date range: {init_date} to {end_date}")
 
@@ -871,9 +873,12 @@ class BaseAgent:
 
         print(f"📊 Trading days to process: {trading_dates}")
 
+        start_hour = int(start_time.split(":")[0])
+        end_hour = int(end_time.split(":")[0])
+
         # Process each trading day
         for date in trading_dates:
-            for hour in range(9, 17):
+            for hour in range(start_hour, end_hour + 1):
                 print(f"🔄 Processing {self.signature} - Date: {date} Hour: {hour}")
 
                 # Set configuration
