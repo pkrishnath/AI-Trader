@@ -8,6 +8,15 @@ on:
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
     inputs:
+      config_file:
+        description: 'Config file to use (crypto, futures, or stock)'
+        required: true
+        default: 'crypto'
+        type: choice
+        options:
+          - crypto
+          - futures
+          - stock
       asset_type:
         description: 'Type of asset to trade (crypto or stock)'
         required: true
@@ -111,18 +120,10 @@ jobs:
         id: get_signature
         run: |
           LLM_MODEL="${{ github.event.inputs.llm_model || 'deepseek' }}"
-          CONFIG_FILE=""
-          case "$LLM_MODEL" in
-            groq)
-              CONFIG_FILE="configs/groq_config.json"
-              ;;
-            deepseek)
-              CONFIG_FILE="configs/crypto_config.json"
-              ;;
-            *)
-              CONFIG_FILE="configs/crypto_config.json"
-              ;;
-          esac
+          CONFIG_TYPE="${{ github.event.inputs.config_file || 'crypto' }}"
+          CONFIG_FILE="configs/${CONFIG_TYPE}_config.json"
+
+          echo "📝 Using config file: $CONFIG_FILE"
           SIGNATURE=$(jq -r ".models[] | select(.name==\"$LLM_MODEL\").signature" $CONFIG_FILE)
           echo "SIGNATURE=$SIGNATURE" >> $GITHUB_ENV
 
@@ -173,25 +174,14 @@ jobs:
           echo "Service startup complete. Current status:"
           docker compose -f docker-compose.yml ps
 
-          echo "Running crypto trading simulation inside agent-runner container..."
+          echo "Running trading simulation inside agent-runner container..."
           AGENT_RUNNER_CONTAINER_NAME="agent-runner-container"
           LLM_MODEL="${{ github.event.inputs.llm_model || 'deepseek' }}"
+          CONFIG_TYPE="${{ github.event.inputs.config_file || 'crypto' }}"
+          CONFIG_FILE="configs/${CONFIG_TYPE}_config.json"
 
-          # Select config file based on LLM model
-          case "$LLM_MODEL" in
-            groq)
-              CONFIG_FILE="configs/groq_config.json"
-              echo "📝 Using Groq config: $CONFIG_FILE"
-              ;;
-            deepseek)
-              CONFIG_FILE="configs/crypto_config.json"
-              echo "📝 Using DeepSeek config: $CONFIG_FILE"
-              ;;
-            *)
-              CONFIG_FILE="configs/crypto_config.json"
-              echo "📝 Using default crypto config: $CONFIG_FILE"
-              ;;
-          esac
+          echo "📝 Using config: $CONFIG_FILE"
+          echo "📝 LLM Model: $LLM_MODEL"
 
           docker exec \
             -e SIGNATURE="${{ env.SIGNATURE }}" \
