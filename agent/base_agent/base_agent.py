@@ -691,12 +691,15 @@ class BaseAgent:
         max_date_obj = datetime.strptime(max_date, "%Y-%m-%d")
         end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
 
-        if end_date_obj <= max_date_obj:
+        if end_date_obj < max_date_obj:
             return []
 
         # Generate trading date list
         trading_dates = []
-        current_date = max_date_obj + timedelta(days=1)
+        if init_date == end_date and end_date_obj == max_date_obj:
+            current_date = max_date_obj
+        else:
+            current_date = max_date_obj + timedelta(days=1)
 
         while current_date <= end_date_obj:
             # For crypto and futures, trade 24/7; for stocks, trade on weekdays only
