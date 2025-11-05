@@ -861,43 +861,45 @@ class BaseAgent:
 
     async def run_date_range(self, init_date: str, end_date: str) -> None:
         """
-        Run all trading days in date range
+        Run all trading hours in date range
 
         Args:
             init_date: Start date
             end_date: End date
-            start_time: Start time for the trading session (HH:MM)
-            end_time: End time for the trading session (HH:MM)
         """
-        print(f"📅 Running date range: {init_date} to {end_date}")
+        print(f"📅 Running date range: {init_date} {self.start_time} to {end_date} {self.end_time}")
 
-        # Get trading date list
+        start_dt = datetime.strptime(f"{init_date} {self.start_time}", "%Y-%m-%d %H:%M")
+        end_dt = datetime.strptime(f"{end_date} {self.end_time}", "%Y-%m-%d %H:%M")
+
         trading_dates = self.get_trading_dates(init_date, end_date)
 
         if not trading_dates:
             print(f"ℹ️ No trading days to process")
             return
-
+        
         print(f"📊 Trading days to process: {trading_dates}")
 
-        start_hour = int(self.start_time.split(":")[0])
-        end_hour = int(self.end_time.split(":")[0])
+        current_dt = start_dt
+        while current_dt <= end_dt:
+            date_str = current_dt.strftime("%Y-%m-%d")
+            hour = current_dt.hour
 
-        # Process each trading day
-        for date in trading_dates:
-            for hour in range(start_hour, end_hour + 1):
-                print(f"🔄 Processing {self.signature} - Date: {date} Hour: {hour}")
+            if date_str in trading_dates:
+                print(f"🔄 Processing {self.signature} - Date: {date_str} Hour: {hour}")
 
                 # Set configuration
-                write_config_value("TODAY_DATE", date)
+                write_config_value("TODAY_DATE", date_str)
                 write_config_value("SIGNATURE", self.signature)
 
                 try:
-                    await self.run_hourly_trading_session(date, hour)
+                    await self.run_hourly_trading_session(date_str, hour)
                 except Exception as e:
-                    print(f"❌ Error processing {self.signature} - Date: {date} Hour: {hour}")
+                    print(f"❌ Error processing {self.signature} - Date: {date_str} Hour: {hour}")
                     print(e)
                     raise
+            
+            current_dt += timedelta(hours=1)
 
         print(f"✅ {self.signature} processing completed")
 

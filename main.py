@@ -17,6 +17,17 @@ AGENT_REGISTRY = {
 }
 
 
+def parse_custom_datetime(datetime_str):
+    """Parse datetime string in mmddyy hhmm format"""
+    if datetime_str:
+        try:
+            return datetime.strptime(datetime_str, "%m%d%y %H%M")
+        except ValueError:
+            print(f"❌ Invalid datetime format: {datetime_str}. Please use 'mmddyy HHMM'.")
+            exit(1)
+    return None
+
+
 def get_agent_class(agent_type):
     """
     Dynamically import and return the corresponding class based on agent type name
@@ -108,33 +119,33 @@ async def main(config_path=None):
         print(str(e))
         exit(1)
 
-    # Get date range from configuration file
-    INIT_DATE = config["date_range"]["init_date"]
-    END_DATE = config["date_range"]["end_date"]
+    start_datetime_str = os.getenv("START_DATETIME")
+    end_datetime_str = os.getenv("END_DATETIME")
 
-    # Environment variables can override dates in configuration file
-    if os.getenv("INIT_DATE"):
-        INIT_DATE = os.getenv("INIT_DATE")
-        print(f"⚠️  Using environment variable to override INIT_DATE: {INIT_DATE}")
-    if os.getenv("END_DATE"):
-        END_DATE = os.getenv("END_DATE")
-        print(f"⚠️  Using environment variable to override END_DATE: {END_DATE}")
+    start_datetime = parse_custom_datetime(start_datetime_str)
+    end_datetime = parse_custom_datetime(end_datetime_str)
 
-    # Dynamic date handling
-    def parse_dynamic_date(date_str):
-        """Parse dynamic date strings like TODAY, TODAY-1, TODAY-7"""
-        if date_str.startswith("TODAY"):
-            days_offset = 0
-            if "-" in date_str and date_str != "TODAY":
-                try:
-                    days_offset = -int(date_str.split("-", 1)[1])
-                except (ValueError, IndexError):
-                    pass
-            return (datetime.now() + timedelta(days=days_offset)).strftime("%Y-%m-%d")
-        return date_str
+    if start_datetime and end_datetime:
+        INIT_DATE = start_datetime.strftime("%Y-%m-%d")
+        END_DATE = end_datetime.strftime("%Y-%m-%d")
+        start_time = start_datetime.strftime("%H:%M")
+        end_time = end_datetime.strftime("%H:%M")
+        print(f"⚠️  Using START_DATETIME and END_DATETIME environment variables.")
+        print(f"   INIT_DATE: {INIT_DATE}, END_DATE: {END_DATE}")
+        print(f"   start_time: {start_time}, end_time: {end_time}")
+    else:
+        # Default to yesterday 9:30 to today 9:30
+        today_dt = datetime.now()
+        yesterday_dt = today_dt - timedelta(days=1)
 
-    INIT_DATE = parse_dynamic_date(INIT_DATE)
-    END_DATE = parse_dynamic_date(END_DATE)
+        start_datetime = yesterday_dt.replace(hour=9, minute=30, second=0, microsecond=0)
+        end_datetime = today_dt.replace(hour=9, minute=30, second=0, microsecond=0)
+
+        INIT_DATE = start_datetime.strftime("%Y-%m-%d")
+        END_DATE = end_datetime.strftime("%Y-%m-%d")
+        start_time = start_datetime.strftime("%H:%M")
+        end_time = end_datetime.strftime("%H:%M")
+        print("⚠️  No datetime provided. Using default: yesterday 9:30 to today 9:30.")
 
     # Validate date range
     INIT_DATE_obj = datetime.strptime(INIT_DATE, "%Y-%m-%d").date()
@@ -142,16 +153,6 @@ async def main(config_path=None):
     if INIT_DATE_obj > END_DATE_obj:
         print("❌ INIT_DATE is greater than END_DATE")
         exit(1)
-
-    # Get trading session times
-    trading_session_config = config.get("trading_session", {})
-    start_time = os.getenv("START_TIME", trading_session_config.get("start_time", "09:30"))
-    end_time = os.getenv("END_TIME", trading_session_config.get("end_time", "16:00"))
-
-    if os.getenv("START_TIME"):
-        print(f"⚠️  Using environment variable to override start_time: {start_time}")
-    if os.getenv("END_TIME"):
-        print(f"⚠️  Using environment variable to override end_time: {end_time}")
 
     # Get model list from configuration file (only select enabled models)
     enabled_models = [model for model in config["models"] if model.get("enabled", True)]

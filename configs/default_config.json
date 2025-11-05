@@ -4,6 +4,10 @@
     "init_date": "TODAY-7",
     "end_date": "TODAY"
   },
+  "trading_session": {
+    "start_time": "09:30",
+    "end_time": "16:00"
+  },
   "models": [
     {
       "name": "gpt-4-turbo",

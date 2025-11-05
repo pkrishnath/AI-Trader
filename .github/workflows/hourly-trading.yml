@@ -41,14 +41,14 @@ on:
           - swing
           - intraday
           - scalp
-      start_time:
-        description: 'Start time for the trading session (HH:MM)'
+      start_datetime:
+        description: 'Start datetime for the trading session (mmddyy HHMM)'
         required: false
-        default: '09:30'
-      end_time:
-        description: 'End time for the trading session (HH:MM)'
+        default: ''
+      end_datetime:
+        description: 'End datetime for the trading session (mmddyy HHMM)'
         required: false
-        default: '16:00'
+        default: ''
 
 jobs:
   trading-run:
@@ -198,8 +198,8 @@ jobs:
             -e ASSET_TYPE="${{ github.event.inputs.asset_type || 'futures' }}" \
             -e TRADING_SYMBOLS="${{ github.event.inputs.symbols || 'NQ1' }}" \
             -e TRADE_STYLE="${{ github.event.inputs.trade_style || 'intraday' }}" \
-            -e START_TIME="${{ github.event.inputs.start_time || '09:30' }}" \
-            -e END_TIME="${{ github.event.inputs.end_time || '16:00' }}" \
+            -e START_DATETIME="${{ github.event.inputs.start_datetime }}" \
+            -e END_DATETIME="${{ github.event.inputs.end_datetime }}" \
             -e AGENT_MAX_STEP="${{ env.AGENT_MAX_STEP }}" \
             -e RUNTIME_ENV_PATH="/app/.runtime_env.json" \
             -e PYTHONUNBUFFERED=1 \
