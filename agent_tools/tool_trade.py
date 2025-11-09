@@ -25,10 +25,9 @@ async def health_check(request: Request) -> PlainTextResponse:
     return PlainTextResponse("OK")
 
 
-@mcp.tool()
-def buy(symbol: str, amount: int) -> Dict[str, Any]:
+def buy_logic(symbol: str, amount: int) -> Dict[str, Any]:
     """
-    Buy stock function
+    Core logic for buying a stock.
     """
     signature = get_config_value("SIGNATURE")
     if signature is None:
@@ -40,11 +39,10 @@ def buy(symbol: str, amount: int) -> Dict[str, Any]:
         current_position, current_action_id = get_latest_position(today_date, signature)
     except Exception as e:
         print(e)
-        print(current_position, current_action_id)
-        print(today_date, signature)
+        return {"error": f"Could not get latest position: {e}"}
 
     try:
-        this_symbol_price = get_open_prices(today_date, [symbol])[f"{symbol}_price"] 
+        this_symbol_price = get_open_prices(today_date, [symbol])[f"{symbol}_price"]
     except KeyError:
         return {
             "error": f"Symbol {symbol} not found! This action will not be allowed.",
@@ -52,11 +50,13 @@ def buy(symbol: str, amount: int) -> Dict[str, Any]:
             "date": today_date,
         }
 
+    if this_symbol_price is None:
+        return {"error": f"Price for {symbol} is not available on {today_date}."}
+
     try:
         cash_left = current_position["CASH"] - this_symbol_price * amount
-    except Exception:
-        print(current_position, "CASH", this_symbol_price, amount)
-        raise
+    except Exception as e:
+        return {"error": f"Could not calculate cash left: {e}"}
 
     if cash_left < 0:
         return {
@@ -81,18 +81,14 @@ def buy(symbol: str, amount: int) -> Dict[str, Any]:
                 "this_action": {"action": "buy", "symbol": symbol, "amount": amount},
                 "positions": new_position,
             }
-            print(f"Writing to position.jsonl: {json.dumps(log_data)}")
             f.write(json.dumps(log_data) + "\n")
 
         write_config_value("IF_TRADE", True)
-        print("IF_TRADE", get_config_value("IF_TRADE"))
         return new_position
 
-
-@mcp.tool()
-def sell(symbol: str, amount: int) -> Dict[str, Any]:
+def sell_logic(symbol: str, amount: int) -> Dict[str, Any]:
     """
-    Sell stock function
+    Core logic for selling a stock.
     """
     signature = get_config_value("SIGNATURE")
     if signature is None:
@@ -110,6 +106,9 @@ def sell(symbol: str, amount: int) -> Dict[str, Any]:
             "symbol": symbol,
             "date": today_date,
         }
+    
+    if this_symbol_price is None:
+        return {"error": f"Price for {symbol} is not available on {today_date}."}
 
     if symbol not in current_position:
         return {
@@ -118,7 +117,7 @@ def sell(symbol: str, amount: int) -> Dict[str, Any]:
             "date": today_date,
         }
 
-    if current_position[symbol] < amount:
+    if current_position.get(symbol, 0) < amount:
         return {
             "error": "Insufficient shares! This action will not be allowed.",
             "have": current_position.get(symbol, 0),
@@ -141,11 +140,26 @@ def sell(symbol: str, amount: int) -> Dict[str, Any]:
             "this_action": {"action": "sell", "symbol": symbol, "amount": amount},
             "positions": new_position,
         }
-        print(f"Writing to position.jsonl: {json.dumps(log_data)}")
         f.write(json.dumps(log_data) + "\n")
 
     write_config_value("IF_TRADE", True)
     return new_position
+
+
+@mcp.tool()
+def buy(symbol: str, amount: int) -> Dict[str, Any]:
+    """
+    Buy stock function. This is a wrapper around the core logic.
+    """
+    return buy_logic(symbol, amount)
+
+
+@mcp.tool()
+def sell(symbol: str, amount: int) -> Dict[str, Any]:
+    """
+    Sell stock function. This is a wrapper around the core logic.
+    """
+    return sell_logic(symbol, amount)
 
 
 if __name__ == "__main__":
