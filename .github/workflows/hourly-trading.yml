@@ -134,7 +134,7 @@ jobs:
         run: |
           docker compose -f docker-compose.yml down --volumes --rmi all || true # Clean up previous runs
           docker compose -f docker-compose.yml build --no-cache --pull
-          docker compose -f docker-compose.yml up -d -V
+          docker compose -f docker-compose.yml up -d -V || (docker compose logs trade-service futures-trade-service crypto-trade-service && exit 1)
           echo "MCP services launched. Waiting for all services to be healthy..."
 
           # Wait for all services to be healthy (max 120 seconds)
@@ -148,10 +148,12 @@ jobs:
             search_health=$(docker compose -f docker-compose.yml ps search-service --format json | jq -r '.Health')
             trade_health=$(docker compose -f docker-compose.yml ps trade-service --format json | jq -r '.Health')
             prices_health=$(docker compose -f docker-compose.yml ps prices-service --format json | jq -r '.Health')
+            crypto_trade_health=$(docker compose -f docker-compose.yml ps crypto-trade-service --format json | jq -r '.Health')
+            futures_trade_health=$(docker compose -f docker-compose.yml ps futures-trade-service --format json | jq -r '.Health')
 
-            echo "Math: $math_health | Search: $search_health | Trade: $trade_health | Prices: $prices_health"
+            echo "Math: $math_health | Search: $search_health | Trade: $trade_health | Prices: $prices_health | Crypto: $crypto_trade_health | Futures: $futures_trade_health"
 
-            if [ "$math_health" = "healthy" ] && [ "$search_health" = "healthy" ] && [ "$trade_health" = "healthy" ] && [ "$prices_health" = "healthy" ]; then
+            if [ "$math_health" = "healthy" ] && [ "$search_health" = "healthy" ] && [ "$trade_health" = "healthy" ] && [ "$prices_health" = "healthy" ] && [ "$crypto_trade_health" = "healthy" ] && [ "$futures_trade_health" = "healthy" ]; then
               echo "✅ All services are healthy and responding!"
               break
             fi
@@ -165,8 +167,6 @@ jobs:
 
           if [ $attempt -eq $max_attempts ]; then
             echo "⚠️  Timeout waiting for services to be healthy. Checking logs..."
-            docker compose -f docker-compose.yml logs futures-trade-service
-            docker compose -f docker-compose.yml logs crypto-trade-service
             docker compose -f docker-compose.yml logs
             exit 1
           fi
@@ -175,7 +175,7 @@ jobs:
           docker compose -f docker-compose.yml ps
 
           echo "Verifying 'toon' module installation..."
-          docker exec agent-runner-container sh -lc "python3 -c 'import sys,os;print(sys.path);import toon; print(\"Successfully imported toon!\")' || (echo 'PYTHONPATH in container:' && docker exec agent-runner-container env | grep PYTHONPATH && docker exec agent-runner-container ls -la /app && false)"
+          docker exec agent-runner-container sh -c "python3 -m pip install -r requirements.txt && python3 -c 'import toon; print(\"Successfully imported toon!\")'"
 
           echo "Running trading simulation inside agent-runner container..."
           AGENT_RUNNER_CONTAINER_NAME="agent-runner-container"
