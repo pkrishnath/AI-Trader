@@ -41,12 +41,16 @@ on:
           - swing
           - intraday
           - scalp
-      start_datetime:
+      data_start_datetime:
+        description: 'Start datetime for data fetching (mmddyy HHMM)'
+        required: false
+        default: ''
+      trade_start_datetime:
         description: 'Start datetime for the trading session (mmddyy HHMM)'
         required: false
         default: ''
       end_datetime:
-        description: 'End datetime for the trading session (mmddyy HHMM)'
+        description: 'End datetime for data fetching and trading session (mmddyy HHMM)'
         required: false
         default: ''
 
@@ -103,9 +107,12 @@ jobs:
           cd data
           ASSET_TYPE="${{ github.event.inputs.asset_type || 'futures' }}"
           SYMBOLS="${{ github.event.inputs.symbols || 'NQ1' }}"
+          DATA_START_DATETIME="${{ github.event.inputs.data_start_datetime }}"
+          END_DATETIME="${{ github.event.inputs.end_datetime }}"
 
           # Use unified data fetcher (checks local CSV first, falls back to API)
           echo "📊 Fetching data with unified CSV-first strategy..."
+          START_DATETIME="$DATA_START_DATETIME" END_DATETIME="$END_DATETIME" \
           python get_data.py --asset-type "$ASSET_TYPE" --symbols "$SYMBOLS" --no-csv
 
           # Merge data for dashboard
@@ -227,7 +234,7 @@ jobs:
             -e ASSET_TYPE="${{ github.event.inputs.asset_type || 'futures' }}" \
             -e TRADING_SYMBOLS="${{ github.event.inputs.symbols || 'NQ1' }}" \
             -e TRADE_STYLE="${{ github.event.inputs.trade_style || 'intraday' }}" \
-            -e START_DATETIME="${{ github.event.inputs.start_datetime }}" \
+            -e START_DATETIME="${{ github.event.inputs.trade_start_datetime }}" \
             -e END_DATETIME="${{ github.event.inputs.end_datetime }}" \
             -e AGENT_MAX_STEP="${{ env.AGENT_MAX_STEP }}" \
             -e RUNTIME_ENV_PATH="/app/.runtime_env.json" \
