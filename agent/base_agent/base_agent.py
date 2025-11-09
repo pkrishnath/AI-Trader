@@ -179,4 +179,26 @@ class BaseAgent:
         # ... (implementation is correct)
         pass
     
+    def get_position_summary(self) -> Dict[str, Any]:
+        """Get position summary"""
+        if not os.path.exists(self.position_file):
+            return {"error": "Position file does not exist"}
+
+        positions = []
+        with open(self.position_file, "r") as f:
+            for line in f:
+                positions.append(json.loads(line))
+
+        if not positions:
+            return {"error": "No position records"}
+
+        latest_position = positions[-1]
+        return {
+            "signature": self.signature,
+            "latest_date": latest_position.get("date"),
+            "positions": latest_position.get("positions", {}),
+            "total_records": len(positions),
+        }
+    
     # ... (rest of the class is correct)
+
