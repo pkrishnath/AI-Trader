@@ -100,7 +100,7 @@ def buy_crypto(crypto_symbol: str, amount: float) -> Dict[str, Any]:
         # Step 5: Execute buy operation, update position
         new_position = current_position.copy()
         new_position["CASH"] = cash_left
-        new_position[crypto_symbol] += amount
+        new_position[crypto_symbol] = new_position.get(crypto_symbol, 0) + amount
 
         # Step 6: Record transaction to position.jsonl file
         position_file_path = os.path.join(
