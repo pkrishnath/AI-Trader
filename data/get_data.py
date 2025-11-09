@@ -73,7 +73,7 @@ def fetch_futures_data(symbols: list):
             print(f"Error processing data for {symbol}: {e}")
 
 
-def get_data(use_local_csv=True, asset_type="crypto", symbols=None, days=60):
+def get_data(use_local_csv=True, asset_type="crypto", symbols=None, days=90):
     """
     Fetch market data - prefer local CSV, fall back to APIs
     """
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--symbols", default="BTC,ETH", help="Comma-separated symbols"
     )
-    parser.add_argument("--days", type=int, default=60, help="Days of data to fetch")
+    parser.add_argument("--days", type=int, default=90, help="Days of data to fetch")
 
     args = parser.parse_args()
 
