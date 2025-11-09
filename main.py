@@ -189,7 +189,9 @@ async def main(config_path=None):  # noqa: C901
 
         try:
             trade_style = os.getenv("TRADE_STYLE", "swing").lower()
+            ict_model_type = os.getenv("ICT_MODEL_TYPE", "generic").lower() # Get ICT_MODEL_TYPE
             print(f"💱 Trading style: {trade_style}")
+            print(f"🧠 ICT Model Type: {ict_model_type}") # Print for verification
 
             agent = AgentClass(
                 signature=signature,
@@ -205,6 +207,7 @@ async def main(config_path=None):  # noqa: C901
                 initial_cash=initial_cash,
                 init_date=INIT_DATE,
                 trade_style=trade_style,
+                ict_model_type=ict_model_type, # Pass ICT_MODEL_TYPE
                 start_time=start_time,
                 end_time=end_time,
             )

@@ -71,6 +71,7 @@ class BaseAgent:
         initial_cash: float = 10000.0,
         init_date: str = "2025-10-13",
         trade_style: str = "swing",
+        ict_model_type: str = "generic", # New parameter
         start_time: str = "09:30",
         end_time: str = "16:00",
     ):
@@ -79,6 +80,7 @@ class BaseAgent:
         self.asset_type = asset_type
         self.stock_symbols = stock_symbols or self.DEFAULT_STOCK_SYMBOLS
         self.trade_style = trade_style.lower() if trade_style else "swing"
+        self.ict_model_type = ict_model_type # Assign new parameter
         self.max_steps = max_steps
         self.max_retries = max_retries
         self.base_delay = base_delay
@@ -155,7 +157,11 @@ class BaseAgent:
         print(f"📈 Starting trading session: {today_date} {hour}:00")
         log_file = self._setup_logging(f"{today_date}_{hour}")
 
-        prompt_generator = IctPromptGenerator(asset_type=self.asset_type, symbols=self.stock_symbols)
+        prompt_generator = IctPromptGenerator(
+            asset_type=self.asset_type,
+            symbols=self.stock_symbols,
+            model_type=self.ict_model_type # Pass the new parameter
+        )
         system_prompt = prompt_generator.generate_prompt(today_date, self.signature)
         
         system_prompt = system_prompt.replace("__TOOL_NAMES__", "{tool_names}")
