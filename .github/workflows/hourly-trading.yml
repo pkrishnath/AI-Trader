@@ -137,13 +137,25 @@ jobs:
           docker compose -f docker-compose.yml up -d -V
           echo "MCP services launched. Checking for immediate failures..."
 
-          # Check for any containers that exited immediately
-          EXITED_CONTAINERS=$(docker compose -f docker-compose.yml ps --format json | jq -r '.[] | select(.State=="exited") | .Service')
-          if [ -n "$EXITED_CONTAINERS" ]; then
+          # Robustly check for any containers that exited immediately
+          EXITED_SERVICES=""
+          while IFS= read -r line; do
+            # Ensure the line is a valid JSON object before processing
+            if ! echo "$line" | jq empty; then
+              continue
+            fi
+            STATE=$(echo "$line" | jq -r '.State')
+            if [ "$STATE" = "exited" ]; then
+              SERVICE=$(echo "$line" | jq -r '.Service')
+              EXITED_SERVICES="$EXITED_SERVICES $SERVICE"
+            fi
+          done <<< "$(docker compose -f docker-compose.yml ps --format json)"
+
+          if [ -n "$EXITED_SERVICES" ]; then
             echo "‼️ One or more services failed to start:"
-            for service in $EXITED_CONTAINERS; do
+            for service in $EXITED_SERVICES; do
               echo "--- Logs for $service ---"
-              docker compose logs $service
+              docker compose logs "$service"
               echo "-------------------------"
             done
             exit 1
