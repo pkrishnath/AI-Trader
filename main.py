@@ -110,12 +110,16 @@ async def main(config_path=None):  # noqa: C901
         today_dt = datetime.now()
         yesterday_dt = today_dt - timedelta(days=1)
         start_datetime = yesterday_dt.replace(hour=9, minute=30, second=0, microsecond=0)
-        end_datetime = today_dt.replace(hour=9, minute=30, second=0, microsecond=0)
+        # If end_datetime_str was empty, default end_datetime to current time
+        if not end_datetime_str:
+            end_datetime = today_dt # Use current time
+        else:
+            end_datetime = today_dt.replace(hour=9, minute=30, second=0, microsecond=0) # Keep original default if end_datetime_str was not empty but invalid
         INIT_DATE = start_datetime.strftime("%Y-%m-%d")
         END_DATE = end_datetime.strftime("%Y-%m-%d")
         start_time = start_datetime.strftime("%H:%M")
         end_time = end_datetime.strftime("%H:%M")
-        print("⚠️  No datetime provided. Using default: yesterday 9:30 to today 9:30.")
+        print("⚠️  No datetime provided. Using default: yesterday 9:30 to today current time.")
 
     INIT_DATE_obj = datetime.strptime(INIT_DATE, "%Y-%m-%d").date()
     END_DATE_obj = datetime.strptime(END_DATE, "%Y-%m-%d").date()
