@@ -11,7 +11,7 @@ from starlette.responses import PlainTextResponse
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
-from tools.futures_tools import get_futures_price_on_date, load_futures_price_data
+from tools.futures_tools import get_futures_price_on_date, load_futures_intraday_data
 from tools.general_tools import get_config_value
 from tools.price_tools import get_latest_position
 
@@ -31,7 +31,7 @@ def get_futures_data_grid(futures_symbol: str, target_date: str) -> str:
     """
     Get formatted data grid showing all OHLC data for the day
     """
-    data = load_futures_price_data(futures_symbol)
+    data = load_futures_intraday_data(futures_symbol)
 
     day_data = {}
     for dt_str, ohlc in sorted(data.items()):

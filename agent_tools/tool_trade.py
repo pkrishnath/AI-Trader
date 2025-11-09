@@ -44,7 +44,7 @@ def buy(symbol: str, amount: int) -> Dict[str, Any]:
         print(today_date, signature)
 
     try:
-        this_symbol_price = get_open_prices(today_date, [symbol])[f"{symbol}_price"])
+        this_symbol_price = get_open_prices(today_date, [symbol])[f"{symbol}_price"] 
     except KeyError:
         return {
             "error": f"Symbol {symbol} not found! This action will not be allowed.",
@@ -69,7 +69,7 @@ def buy(symbol: str, amount: int) -> Dict[str, Any]:
     else:
         new_position = current_position.copy()
         new_position["CASH"] = cash_left
-        new_position[symbol] += amount
+        new_position[symbol] = new_position.get(symbol, 0) + amount
 
         position_file_path = os.path.join(
             project_root, "data", "agent_data", signature, "position", "position.jsonl"
@@ -103,7 +103,7 @@ def sell(symbol: str, amount: int) -> Dict[str, Any]:
     current_position, current_action_id = get_latest_position(today_date, signature)
 
     try:
-        this_symbol_price = get_open_prices(today_date, [symbol])[f"{symbol}_price"])
+        this_symbol_price = get_open_prices(today_date, [symbol])[f"{symbol}_price"]
     except KeyError:
         return {
             "error": f"Symbol {symbol} not found! This action will not be allowed.",
