@@ -134,7 +134,21 @@ jobs:
         run: |
           docker compose -f docker-compose.yml down --volumes --rmi all || true # Clean up previous runs
           docker compose -f docker-compose.yml build --no-cache --pull
-          docker compose -f docker-compose.yml up -d -V || (docker compose logs trade-service futures-trade-service crypto-trade-service && exit 1)
+          docker compose -f docker-compose.yml up -d -V
+          echo "MCP services launched. Checking for immediate failures..."
+
+          # Check for any containers that exited immediately
+          EXITED_CONTAINERS=$(docker compose -f docker-compose.yml ps --format json | jq -r '.[] | select(.State=="exited") | .Service')
+          if [ -n "$EXITED_CONTAINERS" ]; then
+            echo "‼️ One or more services failed to start:"
+            for service in $EXITED_CONTAINERS; do
+              echo "--- Logs for $service ---"
+              docker compose logs $service
+              echo "-------------------------"
+            done
+            exit 1
+          fi
+
           echo "MCP services launched. Waiting for all services to be healthy..."
 
           # Wait for all services to be healthy (max 120 seconds)
