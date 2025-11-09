@@ -9,6 +9,7 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import toon
 from dotenv import load_dotenv
 
 from tools.crypto_tools import (
@@ -54,6 +55,17 @@ Thinking standards:
   - **Discuss the risk assessment and any mitigating factors.**
   - **If you decide not to trade, explain why.**
 
+Data Format (TOON):
+The positions and price data are provided in the TOON format, a compact way to represent tabular data.
+It looks like this:
+positions[3] {symbol,amount}
+  BTC 0.5
+  ETH 2.0
+  CASH 5000.0
+The first line `positions[3]` indicates the number of assets.
+The second line `{symbol,amount}` defines the columns.
+Each subsequent line is an asset and the amount you hold.
+
 Notes:
 - You don't need to request user permission, you can execute directly
 - You must execute operations by calling tools, direct output won't be accepted
@@ -70,18 +82,7 @@ Here is the information you need:
 Today's date:
 {date}
 
-Yesterday's closing positions (format: BTC: 0.5, ETH: 2.0, CASH: $5000):
-{positions}
-
-Yesterday's closing prices:
-{yesterday_close_price}
-
-Here is the information you need:
-
-Today's date:
-{date}
-
-Yesterday's closing positions (format: BTC: 0.5, ETH: 2.0, CASH: $5000):
+Yesterday's closing positions:
 {positions}
 
 Yesterday's closing prices:
@@ -92,44 +93,46 @@ Today's Prices:
 
 When you think your task is complete, output:
 {STOP_SIGNAL}
-
-When you think your task is complete, output:
-{STOP_SIGNAL}
 """
 
 
-def get_crypto_positions_string(positions: dict) -> str:
-    """
-    Format crypto positions for agent prompt
-
-    Args:
-        positions: Dictionary with BTC, ETH, CASH
-
-    Returns:
-        Formatted position string
-    """
-    btc = positions.get("BTC", 0)
-    eth = positions.get("ETH", 0)
-    cash = positions.get("CASH", 0)
-
-    return f"BTC: {btc:.6f}, ETH: {eth:.6f}, CASH: ${cash:,.2f}"
+def crypto_positions_to_toon_list(positions: dict) -> list:
+    """Converts a crypto positions dictionary to a list of dictionaries for TOON."""
+    positions_list = []
+    for symbol, amount in positions.items():
+        positions_list.append({"symbol": symbol, "amount": amount})
+    return positions_list
 
 
-def get_crypto_prices_string(target_date: str) -> str:
-    """
-    Get formatted crypto prices for a date
+def get_crypto_price_data_for_toon(crypto_symbol: str, target_date: str) -> list:
+    """Gets crypto price data as a list of dictionaries for TOON conversion."""
+    data = load_crypto_price_data(crypto_symbol)
+    price_list = []
+    if target_date in data:
+        price_data = data[target_date]
+        price_list.append(
+            {
+                "date": target_date,
+                "open": price_data.get("open"),
+                "high": price_data.get("high"),
+                "low": price_data.get("low"),
+                "close": price_data.get("close"),
+            }
+        )
+    return price_list
 
-    Args:
-        target_date: Date string (YYYY-MM-DD)
 
-    Returns:
-        Formatted price string
-    """
+def get_crypto_prices_string_toon(target_date: str) -> str:
+    """Gets formatted crypto prices for a date in TOON format."""
     prices_str = ""
     for crypto in CRYPTO_SYMBOLS:
-        prices_str += format_crypto_price_data(crypto, target_date)
-        prices_str += "\n"
-
+        price_data = get_crypto_price_data_for_toon(crypto, target_date)
+        if price_data:
+            prices_str += f"{crypto} prices:\n"
+            prices_str += toon.dumps(price_data)
+            prices_str += "\n"
+        else:
+            prices_str += f"{crypto}: No data available for {target_date}\n"
     return prices_str
 
 
@@ -153,17 +156,17 @@ def get_crypto_agent_system_prompt(today_date: str, signature: str) -> str:
     yesterday = today - timedelta(days=1)
     yesterday_date = yesterday.strftime("%Y-%m-%d")
 
-    # Get prices
-    yesterday_prices = get_crypto_prices_string(yesterday_date)
-    today_prices = get_crypto_prices_string(today_date)
+    # Get prices in TOON format
+    yesterday_prices = get_crypto_prices_string_toon(yesterday_date)
+    today_prices = get_crypto_prices_string_toon(today_date)
 
-    # Get latest position
+    # Get latest position and convert to TOON
     current_positions, _ = get_latest_position(today_date, signature)
-    positions_str = get_crypto_positions_string(current_positions)
+    positions_toon_str = toon.dumps(crypto_positions_to_toon_list(current_positions))
 
     return crypto_system_prompt.format(
         date=today_date,
-        positions=positions_str,
+        positions=positions_toon_str,
         STOP_SIGNAL=STOP_SIGNAL,
         yesterday_close_price=yesterday_prices,
         today_open_price=today_prices,
@@ -196,7 +199,7 @@ if __name__ == "__main__":
 
     if validate_crypto_data(today_date):
         print("\n" + "=" * 60)
-        print("CRYPTO AGENT SYSTEM PROMPT")
+        print("CRYPTO AGENT SYSTEM PROMPT (TOON FORMAT)")
         print("=" * 60 + "\n")
         prompt = get_crypto_agent_system_prompt(today_date, signature)
         print(prompt)

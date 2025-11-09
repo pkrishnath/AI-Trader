@@ -7,3 +7,4 @@ starlette
 uvicorn
 python-dotenv
 requests
+toon-format

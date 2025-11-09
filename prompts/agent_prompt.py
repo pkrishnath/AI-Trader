@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import toon
 from dotenv import load_dotenv
 
 from tools.general_tools import get_config_value
@@ -147,6 +148,18 @@ Thinking standards:
   - **Discuss the risk assessment and any mitigating factors.**
   - **If you decide not to trade, explain why.**
 
+Data Format (TOON):
+The positions and price data are provided in the TOON format, a compact way to represent tabular data.
+It looks like this:
+positions[101] {symbol,shares}
+  AAPL 10.0
+  MSFT 5.0
+  CASH 7500.25
+  ...
+The first line `positions[101]` indicates the number of assets.
+The second line `{symbol,shares}` defines the columns.
+Each subsequent line is an asset and the number of shares you hold. CASH is also included.
+
 Notes:
 - You don't need to request user permission during operations, you can execute directly
 - You must execute operations by calling tools, directly output operations will not be accepted
@@ -156,7 +169,7 @@ Here is the information you need:
 Today's date:
 {date}
 
-Yesterday's closing positions (numbers after stock codes represent how many shares you hold, numbers after CASH represent your available cash):
+Yesterday's closing positions:
 {positions}
 
 Yesterday's closing prices:
@@ -168,6 +181,24 @@ Today's buying prices:
 When you think your task is complete, output
 {STOP_SIGNAL}
 """
+
+
+def price_dict_to_toon_list(price_dict: Dict[str, Optional[float]]) -> List[Dict]:
+    """Converts a price dictionary to a list of dictionaries for TOON."""
+    price_list = []
+    for key, value in price_dict.items():
+        if key.endswith("_price"):
+            symbol = key[: -len("_price")]
+            price_list.append({"symbol": symbol, "price": value})
+    return price_list
+
+
+def positions_dict_to_toon_list(positions_dict: Dict[str, float]) -> List[Dict]:
+    """Converts a positions dictionary to a list of dictionaries for TOON."""
+    positions_list = []
+    for symbol, shares in positions_dict.items():
+        positions_list.append({"symbol": symbol, "shares": shares})
+    return positions_list
 
 
 def get_agent_system_prompt(today_date: str, signature: str) -> str:
@@ -182,12 +213,20 @@ def get_agent_system_prompt(today_date: str, signature: str) -> str:
     yesterday_profit = get_yesterday_profit(
         today_date, yesterday_buy_prices, yesterday_sell_prices, today_init_position
     )
+
+    # Convert data to TOON format
+    positions_toon_str = toon.dumps(positions_dict_to_toon_list(today_init_position))
+    yesterday_close_price_toon_str = toon.dumps(
+        price_dict_to_toon_list(yesterday_sell_prices)
+    )
+    today_buy_price_toon_str = toon.dumps(price_dict_to_toon_list(today_buy_price))
+
     return agent_system_prompt.format(
         date=today_date,
-        positions=today_init_position,
+        positions=positions_toon_str,
         STOP_SIGNAL=STOP_SIGNAL,
-        yesterday_close_price=yesterday_sell_prices,
-        today_buy_price=today_buy_price,
+        yesterday_close_price=yesterday_close_price_toon_str,
+        today_buy_price=today_buy_price_toon_str,
         yesterday_profit=yesterday_profit,
     )
 
