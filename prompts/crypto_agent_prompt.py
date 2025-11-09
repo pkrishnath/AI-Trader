@@ -22,7 +22,9 @@ def get_crypto_agent_system_prompt(today_date: str, signature: str) -> str:
     Generate system prompt for the crypto trading agent using the generic ICT generator.
     """
     # Instantiate the generator for the 'crypto' asset type
-    prompt_generator = IctPromptGenerator(asset_type="crypto", symbols=CRYPTO_SYMBOLS)
+    prompt_generator = IctPromptGenerator(
+        asset_type="crypto", symbols=CRYPTO_SYMBOLS, model_type="generic"
+    )
 
     # Generate and return the prompt
     return prompt_generator.generate_prompt(today_date, signature)
