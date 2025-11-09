@@ -2,6 +2,7 @@
 Cryptocurrency Trading Agent Prompt
 This file now uses the generic IctPromptGenerator.
 """
+
 import os
 import sys
 
@@ -9,19 +10,20 @@ import sys
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
-from tools.ict_prompt_generator import IctPromptGenerator
 from tools.general_tools import get_config_value
+from tools.ict_prompt_generator import IctPromptGenerator
 
 # Cryptocurrency symbols
 CRYPTO_SYMBOLS = ["BTC", "ETH"]
+
 
 def get_crypto_agent_system_prompt(today_date: str, signature: str) -> str:
     """
     Generate system prompt for the crypto trading agent using the generic ICT generator.
     """
     # Instantiate the generator for the 'crypto' asset type
-    prompt_generator = IctPromptGenerator(asset_type='crypto', symbols=CRYPTO_SYMBOLS)
-    
+    prompt_generator = IctPromptGenerator(asset_type="crypto", symbols=CRYPTO_SYMBOLS)
+
     # Generate and return the prompt
     return prompt_generator.generate_prompt(today_date, signature)
 

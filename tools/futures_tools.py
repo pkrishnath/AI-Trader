@@ -9,7 +9,19 @@ from pathlib import Path
 from typing import Dict, Optional
 
 # Supported futures contracts
-SUPPORTED_FUTURES = ["NQ1", "ES", "MES", "MNQ", "YM", "GC", "CL", "ZB", "ZS", "ZC", "ZW"]
+SUPPORTED_FUTURES = [
+    "NQ1",
+    "ES",
+    "MES",
+    "MNQ",
+    "YM",
+    "GC",
+    "CL",
+    "ZB",
+    "ZS",
+    "ZC",
+    "ZW",
+]
 
 
 def load_futures_intraday_data(futures_symbol: str, data_dir: str = "data") -> Dict:
@@ -32,6 +44,7 @@ def load_futures_intraday_data(futures_symbol: str, data_dir: str = "data") -> D
     except Exception as e:
         print(f"Error loading intraday {futures_symbol} data: {e}")
         return {}
+
 
 def load_futures_daily_data(futures_symbol: str, data_dir: str = "data") -> Dict:
     """
@@ -82,6 +95,7 @@ def get_futures_price_on_date(
 
     return None
 
+
 def get_futures_price_at_time(
     futures_symbol: str, target_date: str, target_time: str, price_type: str = "close"
 ) -> Optional[float]:
@@ -97,7 +111,7 @@ def get_futures_price_at_time(
     # If exact time not found, find the closest available time
     target_dt = datetime.strptime(target_datetime_str, "%Y-%m-%d %H:%M:%S")
     closest_dt = None
-    min_diff = float('inf')
+    min_diff = float("inf")
 
     for dt_str in data.keys():
         if dt_str.startswith(target_date):
@@ -133,11 +147,11 @@ def format_futures_price_data(futures_symbol: str, target_date: str) -> str:
         if dt_str.startswith(target_date):
             prices = price_data
             formatted_prices.append(
-                f'''{futures_symbol} ({prices.get('date')}):
+                f"""{futures_symbol} ({prices.get('date')}):
   Open:  ${prices.get('open', 'N/A'):,.2f}
   High:  ${prices.get('high', 'N/A'):,.2f}
   Low:   ${prices.get('low', 'N/A'):,.2f}
-  Close: ${prices.get('close', 'N/A'):,.2f}'''
+  Close: ${prices.get('close', 'N/A'):,.2f}"""
             )
 
     if formatted_prices:

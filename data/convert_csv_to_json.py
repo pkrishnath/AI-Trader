@@ -7,7 +7,9 @@ Creates both a daily and a 60-minute intraday JSON file from a single CSV.
 import json
 import os
 from pathlib import Path
+
 import polars as pl
+
 
 def convert_csv_to_json(csv_file, output_dir="data"):
     """
@@ -24,7 +26,7 @@ def convert_csv_to_json(csv_file, output_dir="data"):
 
     # --- 1. Load and Prepare Data with Polars ---
     filename = Path(csv_file).stem
-    symbol = filename.split('_')[0] if '_' in filename else filename
+    symbol = filename.split("_")[0] if "_" in filename else filename
 
     print(f"Processing {csv_file} for symbol {symbol}...")
 
@@ -64,7 +66,11 @@ def convert_csv_to_json(csv_file, output_dir="data"):
         ohlc_dict = {}
         for row in dataframe.to_dicts():
             # Format timestamp as string key
-            ts_key = row[time_col].strftime("%Y-%m-%d" if time_col == "datetime" and row[time_col].hour == 0 else "%Y-%m-%d %H:%M:%S")
+            ts_key = row[time_col].strftime(
+                "%Y-%m-%d"
+                if time_col == "datetime" and row[time_col].hour == 0
+                else "%Y-%m-%d %H:%M:%S"
+            )
             ohlc_dict[ts_key] = {
                 "date": ts_key,
                 "open": row["open"],
@@ -80,17 +86,19 @@ def convert_csv_to_json(csv_file, output_dir="data"):
 
     # --- 5. Save Files ---
     os.makedirs(output_dir, exist_ok=True)
-    asset_prefix = "future_prices" if symbol.upper() in ["NQ1", "ES"] else "daily_prices"
+    asset_prefix = (
+        "future_prices" if symbol.upper() in ["NQ1", "ES"] else "daily_prices"
+    )
 
     # Save daily file
     daily_filename = f"{output_dir}/{asset_prefix}_{symbol}_daily.json"
-    with open(daily_filename, 'w') as f:
+    with open(daily_filename, "w") as f:
         json.dump(daily_dict, f, indent=2)
     print(f"✓ Saved DAILY data to {daily_filename} ({len(daily_dict)} records)")
 
     # Save intraday file
     intraday_filename = f"{output_dir}/{asset_prefix}_{symbol}.json"
-    with open(intraday_filename, 'w') as f:
+    with open(intraday_filename, "w") as f:
         json.dump(hourly_dict, f, indent=2)
     print(f"✓ Saved 60-MINUTE data to {intraday_filename} ({len(hourly_dict)} records)")
 
@@ -122,12 +130,15 @@ def convert_all_csv_files(csv_dir="tv_data", output_dir="data"):
         except Exception as e:
             print(f"✗ Error converting {csv_file}: {e}\n")
 
-    print(f"{'='*60}\n✓ Conversion complete! {len(converted_files)} total files created.\n{'='*60}\n")
+    print(
+        f"{'='*60}\n✓ Conversion complete! {len(converted_files)} total files created.\n{'='*60}\n"
+    )
     return converted_files
 
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1:
         convert_csv_to_json(sys.argv[1])
     else:

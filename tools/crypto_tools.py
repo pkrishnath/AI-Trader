@@ -32,6 +32,7 @@ def load_crypto_price_data(crypto_symbol: str, data_dir: str = "data") -> Dict:
         print(f"Error loading {crypto_symbol} data: {e}")
         return {}
 
+
 def load_crypto_daily_price_data(crypto_symbol: str, data_dir: str = "data") -> Dict:
     """
     Load cryptocurrency daily price data from JSON file.
@@ -79,21 +80,24 @@ def get_crypto_price_on_date(
 
     return None
 
+
 def format_crypto_price_data(crypto_symbol: str, target_date: str) -> str:
     """
     Format cryptocurrency price data for display in agent prompt.
     """
     data = load_crypto_price_data(crypto_symbol)
-    
+
     formatted_prices = []
     for dt_str, price_data in sorted(data.items()):
         if dt_str.startswith(target_date):
             prices = price_data
-            formatted_prices.append(f"""{crypto_symbol} ({prices.get('date')}):
+            formatted_prices.append(
+                f"""{crypto_symbol} ({prices.get('date')}):
   Open:  ${prices.get('open', 'N/A'):,.2f}
   High:  ${prices.get('high', 'N/A'):,.2f}
   Low:   ${prices.get('low', 'N/A'):,.2f}
-  Close: ${prices.get('close', 'N/A'):,.2f}""")
+  Close: ${prices.get('close', 'N/A'):,.2f}"""
+            )
 
     if formatted_prices:
         return "\n".join(formatted_prices)

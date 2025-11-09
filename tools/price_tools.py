@@ -3,13 +3,12 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+import csv
 import json
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-import csv
-from datetime import timezone
 
 # 将项目根目录加入 Python 路径，便于从子目录直接运行本文件
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -186,7 +185,7 @@ def load_stock_daily_data(symbol: str, data_dir: str = "data") -> Dict:
         return {}
     with open(price_file, "r") as f:
         raw_data = json.load(f)
-    
+
     time_series = raw_data.get("Time Series (Daily)", {})
     ohlcv_data = {}
     for date_str, values in time_series.items():
@@ -199,6 +198,7 @@ def load_stock_daily_data(symbol: str, data_dir: str = "data") -> Dict:
             "volume": int(values["5. volume"]),
         }
     return ohlcv_data
+
 
 def load_stock_intraday_data(symbol: str, data_dir: str = "data") -> Dict:
     """
@@ -284,6 +284,7 @@ def get_open_prices(
                     results[f"{sym}_price"] = None
 
     return results
+
 
 def get_yesterday_open_and_close_price(
     today_date: str, symbols: List[str], merged_path: Optional[str] = None

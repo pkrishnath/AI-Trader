@@ -9,6 +9,7 @@ import json
 import os
 import time
 from datetime import datetime
+
 import requests
 
 # CoinGecko API endpoints
@@ -92,7 +93,9 @@ def get_crypto_intraday_data(symbol: str, days: int = 3) -> dict:
         return {}
 
 
-def save_crypto_data(symbol: str, data: dict, output_dir: str = "data", suffix: str = "") -> str:
+def save_crypto_data(
+    symbol: str, data: dict, output_dir: str = "data", suffix: str = ""
+) -> str:
     """
     Save cryptocurrency data to JSON file.
     """
@@ -104,7 +107,12 @@ def save_crypto_data(symbol: str, data: dict, output_dir: str = "data", suffix: 
     return filename
 
 
-def fetch_all_crypto_data(symbols: list = None, intraday_days: int = 3, daily_days: int = 180, output_dir: str = "data"):
+def fetch_all_crypto_data(
+    symbols: list = None,
+    intraday_days: int = 3,
+    daily_days: int = 180,
+    output_dir: str = "data",
+):
     """
     Fetch and save both daily and intraday data for all cryptocurrencies.
     """
@@ -137,9 +145,9 @@ def fetch_all_crypto_data(symbols: list = None, intraday_days: int = 3, daily_da
 
         except Exception as e:
             print(f"✗ Error processing {symbol}: {e}\n")
-        
+
         print("-" * 20)
-        time.sleep(1) # Delay before next symbol
+        time.sleep(1)  # Delay before next symbol
 
     print("=" * 60)
     print("✓ Cryptocurrency data fetch complete!")
@@ -148,12 +156,33 @@ def fetch_all_crypto_data(symbols: list = None, intraday_days: int = 3, daily_da
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='Fetch cryptocurrency price data.')
-    parser.add_argument('--symbols', type=str, default='BTC,ETH', help='Comma-separated list of crypto symbols to fetch.')
-    parser.add_argument('--intraday_days', type=int, default=3, help='Number of days of high-granularity intraday data to fetch.')
-    parser.add_argument('--daily_days', type=int, default=180, help='Number of days of daily data to fetch for context.')
+
+    parser = argparse.ArgumentParser(description="Fetch cryptocurrency price data.")
+    parser.add_argument(
+        "--symbols",
+        type=str,
+        default="BTC,ETH",
+        help="Comma-separated list of crypto symbols to fetch.",
+    )
+    parser.add_argument(
+        "--intraday_days",
+        type=int,
+        default=3,
+        help="Number of days of high-granularity intraday data to fetch.",
+    )
+    parser.add_argument(
+        "--daily_days",
+        type=int,
+        default=180,
+        help="Number of days of daily data to fetch for context.",
+    )
     args = parser.parse_args()
-    
-    symbols_list = [s.strip().upper() for s in args.symbols.split(',')]
-    
-    fetch_all_crypto_data(symbols=symbols_list, intraday_days=args.intraday_days, daily_days=args.daily_days, output_dir=".")
+
+    symbols_list = [s.strip().upper() for s in args.symbols.split(",")]
+
+    fetch_all_crypto_data(
+        symbols=symbols_list,
+        intraday_days=args.intraday_days,
+        daily_days=args.daily_days,
+        output_dir=".",
+    )

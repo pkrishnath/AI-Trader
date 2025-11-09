@@ -132,12 +132,15 @@ def get_daily_price(SYMBOL: str):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='Fetch daily stock prices.')
-    parser.add_argument('--symbols', type=str, help='Comma-separated list of stock symbols to fetch.')
+
+    parser = argparse.ArgumentParser(description="Fetch daily stock prices.")
+    parser.add_argument(
+        "--symbols", type=str, help="Comma-separated list of stock symbols to fetch."
+    )
     args = parser.parse_args()
 
     if args.symbols:
-        symbols_to_fetch = [s.strip().upper() for s in args.symbols.split(',')]
+        symbols_to_fetch = [s.strip().upper() for s in args.symbols.split(",")]
     else:
         symbols_to_fetch = all_nasdaq_100_symbols
 

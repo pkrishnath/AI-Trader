@@ -1,7 +1,7 @@
+import argparse
 import glob
 import json
 import os
-import argparse
 
 all_nasdaq_100_symbols = [
     "NQ1!",
@@ -109,7 +109,9 @@ all_nasdaq_100_symbols = [
 ]
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--asset_type", default="stock", help="Type of asset to merge (stock or crypto)")
+parser.add_argument(
+    "--asset_type", default="stock", help="Type of asset to merge (stock or crypto)"
+)
 args = parser.parse_args()
 
 # 合并所有以 daily_price 开头的 json，逐文件一行写入 merged.jsonl

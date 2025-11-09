@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+
 # ANSI color codes for terminal output
 class Colors:
     RESET = "\033[0m"
@@ -63,7 +64,7 @@ class TradeLogger:
     def thinking(self, thought: str):
         """Log AI thinking/reasoning"""
         print(f"{Colors.MAGENTA}💭 AI Thinking:{Colors.RESET}")
-        for line in thought.split('\n'):
+        for line in thought.split("\n"):
             if line.strip():
                 print(f"   {line}")
 
@@ -71,7 +72,7 @@ class TradeLogger:
         """Log tool function call"""
         args_str = json.dumps(args, indent=2)
         print(f"{Colors.BRIGHT_BLUE}🔧 Calling tool: {tool_name}{Colors.RESET}")
-        for line in args_str.split('\n'):
+        for line in args_str.split("\n"):
             print(f"   {line}")
 
     def tool_result(self, tool_name: str, result: Any, success: bool = True):
@@ -79,14 +80,16 @@ class TradeLogger:
         status_icon = "✅" if success else "❌"
         status_color = Colors.GREEN if success else Colors.RED
 
-        print(f"{status_color}{status_icon} Tool result from {tool_name}:{Colors.RESET}")
+        print(
+            f"{status_color}{status_icon} Tool result from {tool_name}:{Colors.RESET}"
+        )
 
         if isinstance(result, dict):
             result_str = json.dumps(result, indent=2)
         else:
             result_str = str(result)
 
-        lines = result_str.split('\n')
+        lines = result_str.split("\n")
         for line in lines[:20]:  # Limit output
             print(f"   {line}")
 
@@ -123,14 +126,23 @@ class TradeLogger:
         print(f"   Price: ${price:.2f}")
         print(f"   Value: ${value:.2f}")
 
-    def trade_decision(self, action: str, symbol: str, amount: float, reason: str = "", price: float = 0):
+    def trade_decision(
+        self,
+        action: str,
+        symbol: str,
+        amount: float,
+        reason: str = "",
+        price: float = 0,
+    ):
         """Log trade decision with price and cost"""
         action_icon = "📈" if action.lower() == "buy" else "📉"
         action_color = Colors.GREEN if action.lower() == "buy" else Colors.RED
 
         trade_value = amount * price if price > 0 else 0
 
-        print(f"{action_color}{action_icon} Trade Decision: {action.upper()} {amount} {symbol}{Colors.RESET}")
+        print(
+            f"{action_color}{action_icon} Trade Decision: {action.upper()} {amount} {symbol}{Colors.RESET}"
+        )
         if price > 0:
             print(f"   Price: ${price:,.2f}")
             print(f"   Trade Value: ${trade_value:,.2f}")
@@ -145,15 +157,23 @@ class TradeLogger:
         print(f"   Cash: ${cash:.2f}")
         print(f"{p_and_l_color}   P&L: ${p_and_l:+.2f}{Colors.RESET}")
 
-    def trade_execution(self, symbol: str, action: str, quantity: float,
-                        price: float, commission: float = 0):
+    def trade_execution(
+        self,
+        symbol: str,
+        action: str,
+        quantity: float,
+        price: float,
+        commission: float = 0,
+    ):
         """Log executed trade with details"""
         action_icon = "📈" if action.lower() == "buy" else "📉"
         action_color = Colors.GREEN if action.lower() == "buy" else Colors.RED
 
         total_cost = (quantity * price) + commission
 
-        print(f"{action_color}{action_icon} EXECUTED: {action.upper()} {quantity} {symbol}{Colors.RESET}")
+        print(
+            f"{action_color}{action_icon} EXECUTED: {action.upper()} {quantity} {symbol}{Colors.RESET}"
+        )
         print(f"   Price per unit: ${price:,.2f}")
         print(f"   Quantity: {quantity}")
         print(f"   Subtotal: ${quantity * price:,.2f}")
@@ -161,8 +181,9 @@ class TradeLogger:
             print(f"   Commission: ${commission:,.2f}")
         print(f"   Total Cost: ${total_cost:,.2f}")
 
-    def deepseek_tokens(self, input_tokens: int, output_tokens: int,
-                       cache_hit_rate: float = 0.0):
+    def deepseek_tokens(
+        self, input_tokens: int, output_tokens: int, cache_hit_rate: float = 0.0
+    ):
         """Log DeepSeek token usage and costs"""
         # DeepSeek pricing
         input_cache_cost = (input_tokens * cache_hit_rate) * (0.028 / 1_000_000)
@@ -171,17 +192,28 @@ class TradeLogger:
         total_cost = input_cache_cost + input_regular_cost + output_cost
 
         print(f"{Colors.BRIGHT_BLUE}💻 DeepSeek Token Usage:{Colors.RESET}")
-        print(f"   Input tokens (with cache):     {int(input_tokens * cache_hit_rate):,}")
-        print(f"   Input tokens (without cache): {int(input_tokens * (1 - cache_hit_rate)):,}")
+        print(
+            f"   Input tokens (with cache):     {int(input_tokens * cache_hit_rate):,}"
+        )
+        print(
+            f"   Input tokens (without cache): {int(input_tokens * (1 - cache_hit_rate)):,}"
+        )
         print(f"   Output tokens:                {output_tokens:,}")
         print(f"   Total tokens:                 {input_tokens + output_tokens:,}")
-        print(f"\n   Input (cached):    ${input_cache_cost:.6f} ({cache_hit_rate*100:.0f}% cache hit)")
+        print(
+            f"\n   Input (cached):    ${input_cache_cost:.6f} ({cache_hit_rate*100:.0f}% cache hit)"
+        )
         print(f"   Input (regular):   ${input_regular_cost:.6f}")
         print(f"   Output:            ${output_cost:.6f}")
         print(f"   {Colors.BRIGHT_CYAN}Total API Cost: ${total_cost:.6f}{Colors.RESET}")
 
-    def session_costs(self, total_trades: int, total_trade_value: float,
-                     total_api_cost: float, total_commission: float = 0):
+    def session_costs(
+        self,
+        total_trades: int,
+        total_trade_value: float,
+        total_api_cost: float,
+        total_commission: float = 0,
+    ):
         """Log session financial summary"""
         total_cost = total_api_cost + total_commission
         cost_per_trade = total_cost / total_trades if total_trades > 0 else 0
@@ -192,11 +224,20 @@ class TradeLogger:
         print(f"   API cost (DeepSeek):   ${total_api_cost:,.6f}")
         if total_commission > 0:
             print(f"   Commission:            ${total_commission:,.2f}")
-        print(f"   {Colors.BRIGHT_CYAN}Total cost:            ${total_cost:,.6f}{Colors.RESET}")
+        print(
+            f"   {Colors.BRIGHT_CYAN}Total cost:            ${total_cost:,.6f}{Colors.RESET}"
+        )
         print(f"   Cost per trade:        ${cost_per_trade:,.6f}")
 
-    def execution_summary(self, date: str, status: str, trades_made: int, p_and_l: float,
-                         total_cost: float = 0, total_tokens: int = 0):
+    def execution_summary(
+        self,
+        date: str,
+        status: str,
+        trades_made: int,
+        p_and_l: float,
+        total_cost: float = 0,
+        total_tokens: int = 0,
+    ):
         """Log execution summary with financial details"""
         status_color = Colors.GREEN if status.lower() == "success" else Colors.RED
 
@@ -215,6 +256,7 @@ class TradeLogger:
 
 # Singleton logger instance
 _logger = None
+
 
 def get_logger() -> TradeLogger:
     """Get or create logger instance"""
@@ -261,8 +303,7 @@ def log_detailed_step(
         print(f"{Colors.BRIGHT_BLUE}{'─'*70}{Colors.RESET}")
         for tool_call in tool_calls:
             logger.tool_call(
-                tool_call.get("name", "unknown"),
-                tool_call.get("args", {})
+                tool_call.get("name", "unknown"), tool_call.get("args", {})
             )
 
     if tool_results:
@@ -271,5 +312,5 @@ def log_detailed_step(
             logger.tool_result(
                 result.get("name", "unknown"),
                 result.get("result", ""),
-                result.get("success", True)
+                result.get("success", True),
             )

@@ -1,23 +1,21 @@
 import json
 import os
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
 
 # Add project root directory to Python path BEFORE importing local modules
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
+from tools.crypto_tools import get_crypto_price_on_date
 from tools.general_tools import get_config_value, write_config_value
-from tools.crypto_tools import (
-    get_crypto_price_on_date,
-)
+from tools.price_tools import get_latest_position
 
 mcp = FastMCP("CryptoTradeTools")
-
-from starlette.requests import Request
-from starlette.responses import PlainTextResponse
 
 
 @mcp.custom_route("/health", methods=["GET"])
@@ -65,7 +63,6 @@ def buy_crypto(crypto_symbol: str, amount: float) -> Dict[str, Any]:
     today_date = get_config_value("TODAY_DATE")
 
     # Step 2: Get current latest position and operation ID
-    from tools.price_tools import get_latest_position
     current_position, current_action_id = get_latest_position(today_date, signature)
 
     # Step 3: Get crypto price for the day
@@ -163,7 +160,6 @@ def sell_crypto(crypto_symbol: str, amount: float) -> Dict[str, Any]:
     today_date = get_config_value("TODAY_DATE")
 
     # Step 2: Get current latest position and operation ID
-    from tools.price_tools import get_latest_position
     current_position, current_action_id = get_latest_position(today_date, signature)
 
     # Step 3: Get crypto price for the day

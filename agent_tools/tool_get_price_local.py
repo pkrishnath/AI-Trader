@@ -1,30 +1,30 @@
 import json
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
 
 from dotenv import load_dotenv
 from fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
 
 load_dotenv()
 
-mcp = FastMCP("LocalPrices")
+# Add project root to path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 
-from starlette.requests import Request
-from starlette.responses import PlainTextResponse
+mcp = FastMCP("LocalPrices")
 
 
 @mcp.custom_route("/health", methods=["GET"])
 async def health_check(request: Request) -> PlainTextResponse:
     """
     Health check endpoint.
-    Returns: A simple plain text response indicating server health.
     """
     return PlainTextResponse("OK")
-
-
-from tools.general_tools import get_config_value
 
 
 def _workspace_data_path(filename: str) -> Path:
@@ -41,7 +41,9 @@ def _validate_date(date_str: str) -> None:
 
 @mcp.tool()
 def get_price_local(symbol: str, date: str) -> Dict[str, Any]:
-    """Read OHLCV data for specified stock and date. Get historical information for specified stock.
+    """
+    Read OHLCV data for specified stock and date.
+    Get historical information for specified stock.
 
     Args:
         symbol: Stock symbol, e.g. 'IBM' or '600243.SHH'.
@@ -58,11 +60,7 @@ def get_price_local(symbol: str, date: str) -> Dict[str, Any]:
 
     data_path = _workspace_data_path(filename)
     if not data_path.exists():
-        # Return graceful error instead of crashing
-        print(
-            f"⚠️  Data file not found: {data_path}. Service starting without data.",
-            file=__import__("sys").stderr,
-        )
+        print(f"⚠️  Data file not found: {data_path}.", file=sys.stderr)
         return {
             "error": f"Data file not found: {data_path}",
             "symbol": symbol,
@@ -83,7 +81,8 @@ def get_price_local(symbol: str, date: str) -> Dict[str, Any]:
             if day is None:
                 sample_dates = sorted(series.keys(), reverse=True)[:5]
                 return {
-                    "error": f"Data not found for date {date}. Please verify the date exists in data. Sample available dates: {sample_dates}",
+                    "error": f"Data not found for date {date}. "
+                             f"Sample available dates: {sample_dates}",
                     "symbol": symbol,
                     "date": date,
                 }
@@ -114,6 +113,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ Error starting LocalPrices service: {e}", flush=True)
         import traceback
-
         traceback.print_exc()
         raise

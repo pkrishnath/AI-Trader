@@ -3,19 +3,19 @@
 Unified data fetcher - checks for local CSV first, then falls back to APIs
 """
 
+import json
 import os
 import time
-from pathlib import Path
 from datetime import datetime
-from convert_csv_to_json import convert_csv_to_json, convert_all_csv_files
-from get_crypto_prices import (
-    fetch_all_crypto_data as fetch_from_coingecko,
-)
+from pathlib import Path
+
 import requests
+from convert_csv_to_json import convert_all_csv_files, convert_csv_to_json
 from dotenv import load_dotenv
-import json
+from get_crypto_prices import fetch_all_crypto_data as fetch_from_coingecko
 
 load_dotenv()
+
 
 def fetch_stock_data(symbols: list):
     """
@@ -26,7 +26,9 @@ def fetch_stock_data(symbols: list):
     print("=" * 60)
     APIKEY = os.getenv("ALPHAADVANTAGE_API_KEY")
     if not APIKEY:
-        print("❌ ALPHAADVANTAGE_API_KEY environment variable not set. Cannot fetch stock data.")
+        print(
+            "❌ ALPHAADVANTAGE_API_KEY environment variable not set. Cannot fetch stock data."
+        )
         return
 
     for symbol in symbols:
@@ -43,9 +45,11 @@ def fetch_stock_data(symbols: list):
                     json.dump(daily_data, f, indent=2)
                 print(f"✓ Saved DAILY data for {symbol}")
             else:
-                print(f"⚠️  Could not fetch daily data for {symbol}: {daily_data.get('Information') or daily_data.get('Note')}")
+                print(
+                    f"⚠️  Could not fetch daily data for {symbol}: {daily_data.get('Information') or daily_data.get('Note')}"
+                )
 
-            time.sleep(12) # Be nice to the free API
+            time.sleep(12)  # Be nice to the free API
 
             # Fetch Intraday Data
             print(f"Fetching INTRADAY (60min) data for {symbol}...")
@@ -54,17 +58,19 @@ def fetch_stock_data(symbols: list):
             r_intraday.raise_for_status()
             intraday_data = r_intraday.json()
             if "Time Series (60min)" in intraday_data:
-                 with open(f"daily_prices_{symbol}.json", "w") as f:
+                with open(f"daily_prices_{symbol}.json", "w") as f:
                     json.dump(intraday_data, f, indent=2)
-                 print(f"✓ Saved INTRADAY data for {symbol}")
+                print(f"✓ Saved INTRADAY data for {symbol}")
             else:
-                print(f"⚠️  Could not fetch intraday data for {symbol}: {intraday_data.get('Information') or intraday_data.get('Note')}")
+                print(
+                    f"⚠️  Could not fetch intraday data for {symbol}: {intraday_data.get('Information') or intraday_data.get('Note')}"
+                )
 
         except requests.exceptions.RequestException as e:
             print(f"✗ Error fetching data for {symbol}: {e}")
-        
+
         print("-" * 20)
-        time.sleep(12) # Be nice to the free API before the next symbol
+        time.sleep(12)  # Be nice to the free API before the next symbol
 
 
 def fetch_futures_data(symbols: list):
@@ -78,24 +84,26 @@ def fetch_futures_data(symbols: list):
     for symbol in symbols:
         print(f"Fetching data for {symbol}...")
         api_symbol = f"{symbol}!" if symbol == "NQ1" else symbol
-        
+
         FUNCTION = "TIME_SERIES_INTRADAY"
         INTERVAL = "60min"
         OUTPUTSIZE = "compact"
         APIKEY = os.getenv("ALPHAADVANTAGE_API_KEY")
         url = f"https://www.alphavantage.co/query?function={FUNCTION}&symbol={api_symbol}&interval={INTERVAL}&outputsize={OUTPUTSIZE}&entitlement=delayed&apikey={APIKEY}"
-        
+
         try:
             r = requests.get(url)
             r.raise_for_status()
             data = r.json()
 
             if "Note" in data or "Information" in data:
-                print(f"Error fetching data for {symbol}: {data.get('Note') or data.get('Information')}")
+                print(
+                    f"Error fetching data for {symbol}: {data.get('Note') or data.get('Information')}"
+                )
                 continue
 
             time_series = data.get(f"Time Series ({INTERVAL})", {})
-            
+
             formatted_data = {}
             for timestamp, values in time_series.items():
                 formatted_data[timestamp] = {
@@ -103,13 +111,13 @@ def fetch_futures_data(symbols: list):
                     "high": float(values["2. high"]),
                     "low": float(values["3. low"]),
                     "close": float(values["4. close"]),
-                    "volume": int(values["5. volume"])
+                    "volume": int(values["5. volume"]),
                 }
 
             output_filename = f"future_prices_{symbol}.json"
             with open(output_filename, "w", encoding="utf-8") as f:
                 json.dump(formatted_data, f, ensure_ascii=False, indent=4)
-            
+
             print(f"Successfully saved data for {symbol} to {output_filename}")
 
         except requests.exceptions.RequestException as e:
@@ -133,7 +141,7 @@ def get_data(use_local_csv=True, asset_type="crypto", symbols=None, days=7):
     if asset_type == "futures":
         fetch_futures_data(symbols)
         return
-    
+
     if asset_type == "stock":
         fetch_stock_data(symbols)
         return
@@ -188,9 +196,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--asset-type", default="crypto", help="Asset type: crypto, stock, or futures"
     )
-    parser.add_argument(
-        "--symbols", default="BTC,ETH", help="Comma-separated symbols"
-    )
+    parser.add_argument("--symbols", default="BTC,ETH", help="Comma-separated symbols")
 
     args = parser.parse_args()
 
@@ -207,9 +213,13 @@ if __name__ == "__main__":
             days_to_fetch = delta.days + 1
             if days_to_fetch <= 0:
                 days_to_fetch = 1
-            print(f"🗓️ Calculated days to fetch from environment variables: {days_to_fetch}")
+            print(
+                f"🗓️ Calculated days to fetch from environment variables: {days_to_fetch}"
+            )
         except ValueError:
-            print(f"⚠️ Could not parse START_DATETIME or END_DATETIME. Using default {days_to_fetch} days.")
+            print(
+                f"⚠️ Could not parse START_DATETIME or END_DATETIME. Using default {days_to_fetch} days."
+            )
     else:
         print(f"🗓️ Using default days to fetch: {days_to_fetch}")
 
