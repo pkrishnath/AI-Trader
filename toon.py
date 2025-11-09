@@ -13,7 +13,7 @@ def dumps(rows: List[Dict[str, Any]], name: Optional[str] = None) -> str:
     """
     if rows is None or len(rows) == 0:
         header_name = name or "rows"
-        return f"{header_name}[0] {}"  # empty with no columns
+        return f"{header_name}[0] {{}}\n"  # empty with no columns
 
     # Use keys from first row to define column order
     first = rows[0]
