@@ -175,7 +175,7 @@ jobs:
           docker compose -f docker-compose.yml ps
 
           echo "Verifying 'toon' module installation..."
-          docker exec agent-runner-container python3 -c "import toon; print('Successfully imported toon!')"
+          docker exec agent-runner-container sh -lc "python3 -c 'import sys,os;print(sys.path);import toon; print(\"Successfully imported toon!\")' || (echo 'PYTHONPATH in container:' && docker exec agent-runner-container env | grep PYTHONPATH && docker exec agent-runner-container ls -la /app && false)"
 
           echo "Running trading simulation inside agent-runner container..."
           AGENT_RUNNER_CONTAINER_NAME="agent-runner-container"
