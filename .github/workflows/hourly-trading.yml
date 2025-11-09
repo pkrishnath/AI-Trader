@@ -41,6 +41,14 @@ on:
           - swing
           - intraday
           - scalp
+      ict_model_type:
+        description: 'ICT model type (generic or 2022_model)'
+        required: false
+        default: 'generic'
+        type: choice
+        options:
+          - generic
+          - 2022_model
       data_start_datetime:
         description: 'Start datetime for data fetching (mmddyy HHMM)'
         required: false
@@ -234,6 +242,7 @@ jobs:
             -e ASSET_TYPE="${{ github.event.inputs.asset_type || 'futures' }}" \
             -e TRADING_SYMBOLS="${{ github.event.inputs.symbols || 'NQ1' }}" \
             -e TRADE_STYLE="${{ github.event.inputs.trade_style || 'intraday' }}" \
+            -e ICT_MODEL_TYPE="${{ github.event.inputs.ict_model_type || 'generic' }}" \
             -e START_DATETIME="${{ github.event.inputs.trade_start_datetime }}" \
             -e END_DATETIME="${{ github.event.inputs.end_datetime }}" \
             -e AGENT_MAX_STEP="${{ env.AGENT_MAX_STEP }}" \
