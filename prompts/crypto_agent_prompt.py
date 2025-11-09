@@ -58,7 +58,7 @@ Thinking standards:
 Data Format (TOON):
 The positions and price data are provided in the TOON format, a compact way to represent tabular data.
 It looks like this:
-positions[3] {symbol,amount}
+positions[3] {{symbol,amount}}
   BTC 0.5
   ETH 2.0
   CASH 5000.0
