@@ -4,18 +4,68 @@ Unified data fetcher - checks for local CSV first, then falls back to APIs
 """
 
 import os
+import time
 from pathlib import Path
 from datetime import datetime
 from convert_csv_to_json import convert_csv_to_json, convert_all_csv_files
 from get_crypto_prices import (
     fetch_all_crypto_data as fetch_from_coingecko,
-    get_crypto_current_price,
 )
 import requests
 from dotenv import load_dotenv
 import json
 
 load_dotenv()
+
+def fetch_stock_data(symbols: list):
+    """
+    Fetch daily and intraday stock data from Alpha Vantage.
+    """
+    print("\n" + "=" * 60)
+    print("DATA FETCHER - STOCK HANDLER")
+    print("=" * 60)
+    APIKEY = os.getenv("ALPHAADVANTAGE_API_KEY")
+    if not APIKEY:
+        print("❌ ALPHAADVANTAGE_API_KEY environment variable not set. Cannot fetch stock data.")
+        return
+
+    for symbol in symbols:
+        print(f"--- Fetching data for {symbol} ---")
+        try:
+            # Fetch Daily Data
+            print(f"Fetching DAILY data for {symbol}...")
+            daily_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=full&apikey={APIKEY}"
+            r_daily = requests.get(daily_url)
+            r_daily.raise_for_status()
+            daily_data = r_daily.json()
+            if "Time Series (Daily)" in daily_data:
+                with open(f"daily_prices_{symbol}_daily.json", "w") as f:
+                    json.dump(daily_data, f, indent=2)
+                print(f"✓ Saved DAILY data for {symbol}")
+            else:
+                print(f"⚠️  Could not fetch daily data for {symbol}: {daily_data.get('Information') or daily_data.get('Note')}")
+
+            time.sleep(12) # Be nice to the free API
+
+            # Fetch Intraday Data
+            print(f"Fetching INTRADAY (60min) data for {symbol}...")
+            intraday_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=60min&outputsize=full&apikey={APIKEY}"
+            r_intraday = requests.get(intraday_url)
+            r_intraday.raise_for_status()
+            intraday_data = r_intraday.json()
+            if "Time Series (60min)" in intraday_data:
+                 with open(f"daily_prices_{symbol}.json", "w") as f:
+                    json.dump(intraday_data, f, indent=2)
+                 print(f"✓ Saved INTRADAY data for {symbol}")
+            else:
+                print(f"⚠️  Could not fetch intraday data for {symbol}: {intraday_data.get('Information') or intraday_data.get('Note')}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"✗ Error fetching data for {symbol}: {e}")
+        
+        print("-" * 20)
+        time.sleep(12) # Be nice to the free API before the next symbol
+
 
 def fetch_futures_data(symbols: list):
     """
@@ -27,7 +77,6 @@ def fetch_futures_data(symbols: list):
 
     for symbol in symbols:
         print(f"Fetching data for {symbol}...")
-        # The GitHub workflow uses NQ1, but AlphaVantage expects NQ1!
         api_symbol = f"{symbol}!" if symbol == "NQ1" else symbol
         
         FUNCTION = "TIME_SERIES_INTRADAY"
@@ -45,12 +94,7 @@ def fetch_futures_data(symbols: list):
                 print(f"Error fetching data for {symbol}: {data.get('Note') or data.get('Information')}")
                 continue
 
-            time_series_key = f"Time Series ({INTERVAL})"
-            if time_series_key not in data:
-                print(f"Error: '{time_series_key}' not in response for {symbol}")
-                continue
-            
-            time_series = data[time_series_key]
+            time_series = data.get(f"Time Series ({INTERVAL})", {})
             
             formatted_data = {}
             for timestamp, values in time_series.items():
@@ -89,6 +133,10 @@ def get_data(use_local_csv=True, asset_type="crypto", symbols=None, days=7):
     if asset_type == "futures":
         fetch_futures_data(symbols)
         return
+    
+    if asset_type == "stock":
+        fetch_stock_data(symbols)
+        return
 
     # Step 1: Check for local CSV files
     if use_local_csv:
@@ -126,9 +174,6 @@ def get_data(use_local_csv=True, asset_type="crypto", symbols=None, days=7):
         print(f"   Days: {days}\n")
         fetch_from_coingecko(symbols=symbols, days=days, output_dir=".")
         print("\n✅ Data fetched successfully from CoinGecko!")
-    elif asset_type == "stock":
-        print("\n📡 Fetching stock data is not implemented yet in the fallback.")
-        # Here you could add a stock API fetcher, e.g., using Alpha Vantage
     else:
         print(f"\n⚠️  Unsupported asset type for API fallback: {asset_type}")
 
@@ -159,7 +204,6 @@ if __name__ == "__main__":
             start_dt = datetime.strptime(start_str, "%m%d%y %H%M")
             end_dt = datetime.strptime(end_str, "%m%d%y %H%M")
             delta = end_dt - start_dt
-            # Add 1 to make the range inclusive
             days_to_fetch = delta.days + 1
             if days_to_fetch <= 0:
                 days_to_fetch = 1

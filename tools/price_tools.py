@@ -176,6 +176,55 @@ def get_nq_price_from_csv(date_str: str) -> Tuple[Optional[float], Optional[floa
     return open_price, close_price
 
 
+def load_stock_daily_data(symbol: str, data_dir: str = "data") -> Dict:
+    """
+    Load and parse daily stock data from Alpha Vantage JSON file.
+    """
+    base_dir = Path(__file__).resolve().parents[1]
+    price_file = base_dir / data_dir / f"daily_prices_{symbol}_daily.json"
+    if not price_file.exists():
+        return {}
+    with open(price_file, "r") as f:
+        raw_data = json.load(f)
+    
+    time_series = raw_data.get("Time Series (Daily)", {})
+    ohlcv_data = {}
+    for date_str, values in time_series.items():
+        ohlcv_data[date_str] = {
+            "date": date_str,
+            "open": float(values["1. open"]),
+            "high": float(values["2. high"]),
+            "low": float(values["3. low"]),
+            "close": float(values["4. close"]),
+            "volume": int(values["5. volume"]),
+        }
+    return ohlcv_data
+
+def load_stock_intraday_data(symbol: str, data_dir: str = "data") -> Dict:
+    """
+    Load and parse intraday stock data from Alpha Vantage JSON file.
+    """
+    base_dir = Path(__file__).resolve().parents[1]
+    price_file = base_dir / data_dir / f"daily_prices_{symbol}.json"
+    if not price_file.exists():
+        return {}
+    with open(price_file, "r") as f:
+        raw_data = json.load(f)
+
+    time_series = raw_data.get("Time Series (60min)", {})
+    ohlcv_data = {}
+    for dt_str, values in time_series.items():
+        ohlcv_data[dt_str] = {
+            "datetime": dt_str,
+            "open": float(values["1. open"]),
+            "high": float(values["2. high"]),
+            "low": float(values["3. low"]),
+            "close": float(values["4. close"]),
+            "volume": int(values["5. volume"]),
+        }
+    return ohlcv_data
+
+
 def get_open_prices(
     today_date: str, symbols: List[str], merged_path: Optional[str] = None
 ) -> Dict[str, Optional[float]]:
@@ -235,7 +284,6 @@ def get_open_prices(
                     results[f"{sym}_price"] = None
 
     return results
-
 
 def get_yesterday_open_and_close_price(
     today_date: str, symbols: List[str], merged_path: Optional[str] = None

@@ -12,16 +12,9 @@ from typing import Dict, Optional
 SUPPORTED_FUTURES = ["NQ1", "ES", "MES", "MNQ", "YM", "GC", "CL", "ZB", "ZS", "ZC", "ZW"]
 
 
-def load_futures_price_data(futures_symbol: str, data_dir: str = "data") -> Dict:
+def load_futures_intraday_data(futures_symbol: str, data_dir: str = "data") -> Dict:
     """
-    Load futures price data from JSON file
-
-    Args:
-        futures_symbol: Futures symbol (NQ1, ES, etc.)
-        data_dir: Directory containing price data
-
-    Returns:
-        Dictionary with datetime -> OHLCV data
+    Load futures intraday price data from JSON file
     """
     if futures_symbol not in SUPPORTED_FUTURES:
         raise ValueError(f"Unsupported futures contract: {futures_symbol}")
@@ -29,7 +22,7 @@ def load_futures_price_data(futures_symbol: str, data_dir: str = "data") -> Dict
     price_file = os.path.join(data_dir, f"future_prices_{futures_symbol}.json")
 
     if not os.path.exists(price_file):
-        print(f"⚠️  Price data not found for {futures_symbol}: {price_file}")
+        print(f"⚠️  Intraday price data not found for {futures_symbol}: {price_file}")
         return {}
 
     try:
@@ -37,7 +30,28 @@ def load_futures_price_data(futures_symbol: str, data_dir: str = "data") -> Dict
             data = json.load(f)
         return data
     except Exception as e:
-        print(f"Error loading {futures_symbol} data: {e}")
+        print(f"Error loading intraday {futures_symbol} data: {e}")
+        return {}
+
+def load_futures_daily_data(futures_symbol: str, data_dir: str = "data") -> Dict:
+    """
+    Load futures daily price data from JSON file
+    """
+    if futures_symbol not in SUPPORTED_FUTURES:
+        raise ValueError(f"Unsupported futures contract: {futures_symbol}")
+
+    price_file = os.path.join(data_dir, f"future_prices_{futures_symbol}_daily.json")
+
+    if not os.path.exists(price_file):
+        print(f"⚠️  Daily price data not found for {futures_symbol}: {price_file}")
+        return {}
+
+    try:
+        with open(price_file, "r") as f:
+            data = json.load(f)
+        return data
+    except Exception as e:
+        print(f"Error loading daily {futures_symbol} data: {e}")
         return {}
 
 
@@ -46,16 +60,8 @@ def get_futures_price_on_date(
 ) -> Optional[float]:
     """
     Get the latest futures price on a specific date.
-
-    Args:
-        futures_symbol: Futures symbol (NQ1, ES, etc.)
-        target_date: Date string (YYYY-MM-DD)
-        price_type: Type of price (open, close, high, low)
-
-    Returns:
-        Price value or None if not found
     """
-    data = load_futures_price_data(futures_symbol)
+    data = load_futures_intraday_data(futures_symbol)
 
     latest_datetime_str = None
     latest_dt = None
@@ -81,17 +87,8 @@ def get_futures_price_at_time(
 ) -> Optional[float]:
     """
     Get the futures price at a specific time on a specific date.
-
-    Args:
-        futures_symbol: Futures symbol (NQ1, ES, etc.)
-        target_date: Date string (YYYY-MM-DD)
-        target_time: Time string (HH:MM)
-        price_type: Type of price (open, close, high, low)
-
-    Returns:
-        Price value or None if not found
     """
-    data = load_futures_price_data(futures_symbol)
+    data = load_futures_intraday_data(futures_symbol)
 
     target_datetime_str = f"{target_date} {target_time}:00"
     if target_datetime_str in data:
@@ -121,14 +118,6 @@ def get_futures_price_on_date(
 ) -> Optional[float]:
     """
     Get the latest futures price on a specific date.
-
-    Args:
-        futures_symbol: Futures symbol (NQ1, ES, etc.)
-        target_date: Date string (YYYY-MM-DD)
-        price_type: Type of price (open, close, high, low)
-
-    Returns:
-        Price value or None if not found
     """
     return get_futures_price_at_time(futures_symbol, target_date, "23:59", price_type)
 
@@ -136,15 +125,8 @@ def get_futures_price_on_date(
 def format_futures_price_data(futures_symbol: str, target_date: str) -> str:
     """
     Format futures price data for display in agent prompt.
-
-    Args:
-        futures_symbol: Futures symbol (NQ1, ES, etc.)
-        target_date: Date to get prices for
-
-    Returns:
-        Formatted string with all intraday price data for the day.
     """
-    data = load_futures_price_data(futures_symbol)
+    data = load_futures_intraday_data(futures_symbol)
 
     formatted_prices = []
     for dt_str, price_data in sorted(data.items()):
@@ -169,15 +151,6 @@ def calculate_futures_returns(
 ) -> Optional[Dict]:
     """
     Calculate returns from a futures trade
-
-    Args:
-        futures_symbol: Futures symbol (NQ1, ES, etc.)
-        entry_date: Entry date (YYYY-MM-DD)
-        entry_price: Entry price
-        exit_date: Exit date (YYYY-MM-DD)
-
-    Returns:
-        Dictionary with return metrics or None if dates not found
     """
     exit_price = get_futures_price_on_date(futures_symbol, exit_date, "close")
 
@@ -201,19 +174,13 @@ def calculate_futures_returns(
 def validate_futures_data(futures_symbols: list = None) -> Dict[str, bool]:
     """
     Validate that futures price data is available and loaded
-
-    Args:
-        futures_symbols: List of symbols to validate (default: all)
-
-    Returns:
-        Dictionary with symbol -> available status
     """
     if futures_symbols is None:
         futures_symbols = SUPPORTED_FUTURES
 
     results = {}
     for symbol in futures_symbols:
-        data = load_futures_price_data(symbol)
+        data = load_futures_intraday_data(symbol)
         results[symbol] = len(data) > 0
 
     return results
@@ -222,12 +189,6 @@ def validate_futures_data(futures_symbols: list = None) -> Dict[str, bool]:
 def get_futures_price_summary(futures_symbols: list = None) -> str:
     """
     Get summary of available futures price data
-
-    Args:
-        futures_symbols: List of symbols (default: all)
-
-    Returns:
-        Formatted summary string
     """
     if futures_symbols is None:
         futures_symbols = SUPPORTED_FUTURES
@@ -236,7 +197,7 @@ def get_futures_price_summary(futures_symbols: list = None) -> str:
     summary += "-" * 50 + "\n"
 
     for symbol in futures_symbols:
-        data = load_futures_price_data(symbol)
+        data = load_futures_intraday_data(symbol)
         if data:
             dates = sorted(data.keys())
             latest_price = data[dates[-1]]["close"]
