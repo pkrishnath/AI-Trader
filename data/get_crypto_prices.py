@@ -101,7 +101,7 @@ def get_crypto_intraday_data(symbol: str, from_date: datetime, to_date: datetime
 
 def save_crypto_data(symbol: str, data: dict, output_dir: str = "data", suffix: str = ""):
     os.makedirs(output_dir, exist_ok=True)
-    filename = f"{output_dir}/crypto_prices_{symbol}{suffix}.json"
+    filename = os.path.join(output_dir, f"crypto_prices_{symbol}{suffix}.json")
     with open(filename, "w") as f:
         json.dump(data, f, indent=2)
     print(f"✓ Saved {symbol} data to {filename}")
@@ -120,7 +120,6 @@ def fetch_all_crypto_data(
 
     to_date = datetime.now()
     intraday_from_date = to_date - timedelta(days=intraday_days)
-    daily_from_date = to_date - timedelta(days=daily_days)
 
     for symbol in symbols:
         try:
