@@ -108,17 +108,19 @@ def get_crypto_price_data_for_toon(crypto_symbol: str, target_date: str) -> list
     """Gets crypto price data as a list of dictionaries for TOON conversion."""
     data = load_crypto_price_data(crypto_symbol)
     price_list = []
-    if target_date in data:
-        price_data = data[target_date]
-        price_list.append(
-            {
-                "date": target_date,
-                "open": price_data.get("open"),
-                "high": price_data.get("high"),
-                "low": price_data.get("low"),
-                "close": price_data.get("close"),
-            }
-        )
+    # Loop through all datetime keys in the loaded data
+    for dt_str, price_data in sorted(data.items()):
+        # Check if the key starts with the target date (e.g., "2025-11-08")
+        if dt_str.startswith(target_date):
+            price_list.append(
+                {
+                    "datetime": dt_str,
+                    "open": price_data.get("open"),
+                    "high": price_data.get("high"),
+                    "low": price_data.get("low"),
+                    "close": price_data.get("close"),
+                }
+            )
     return price_list
 
 
