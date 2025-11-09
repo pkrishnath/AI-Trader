@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 import requests
-from convert_csv_to_json import convert_all_csv_files, convert_csv_to_json
+from convert_csv_to_json import convert_all_csv_files
 from dotenv import load_dotenv
 from get_crypto_prices import fetch_all_crypto_data as fetch_from_coingecko
 
@@ -26,9 +26,7 @@ def fetch_stock_data(symbols: list):
     print("=" * 60)
     APIKEY = os.getenv("ALPHAADVANTAGE_API_KEY")
     if not APIKEY:
-        print(
-            "❌ ALPHAADVANTAGE_API_KEY environment variable not set. Cannot fetch stock data."
-        )
+        print("❌ ALPHAADVANTAGE_API_KEY environment variable not set. Cannot fetch stock data.")
         return
 
     for symbol in symbols:
@@ -41,7 +39,7 @@ def fetch_stock_data(symbols: list):
             r_daily.raise_for_status()
             daily_data = r_daily.json()
             if "Time Series (Daily)" in daily_data:
-                with open(f"daily_prices_{symbol}_daily.json", "w") as f:
+                with open(f"data/daily_prices_{symbol}_daily.json", "w") as f:
                     json.dump(daily_data, f, indent=2)
                 print(f"✓ Saved DAILY data for {symbol}")
             else:
@@ -58,7 +56,7 @@ def fetch_stock_data(symbols: list):
             r_intraday.raise_for_status()
             intraday_data = r_intraday.json()
             if "Time Series (60min)" in intraday_data:
-                with open(f"daily_prices_{symbol}.json", "w") as f:
+                with open(f"data/daily_prices_{symbol}.json", "w") as f:
                     json.dump(intraday_data, f, indent=2)
                 print(f"✓ Saved INTRADAY data for {symbol}")
             else:
@@ -102,19 +100,19 @@ def fetch_futures_data(symbols: list):
                 )
                 continue
 
-            time_series = data.get(f"Time Series ({INTERVAL})", {})
+            time_series = data.get(f"Time Series ({INTERVAL})", {{}})
 
-            formatted_data = {}
+            formatted_data = {{}}
             for timestamp, values in time_series.items():
-                formatted_data[timestamp] = {
+                formatted_data[timestamp] = {{
                     "open": float(values["1. open"]),
                     "high": float(values["2. high"]),
                     "low": float(values["3. low"]),
                     "close": float(values["4. close"]),
                     "volume": int(values["5. volume"]),
-                }
+                }}
 
-            output_filename = f"future_prices_{symbol}.json"
+            output_filename = f"data/future_prices_{symbol}.json"
             with open(output_filename, "w", encoding="utf-8") as f:
                 json.dump(formatted_data, f, ensure_ascii=False, indent=4)
 
@@ -126,11 +124,10 @@ def fetch_futures_data(symbols: list):
             print(f"Error processing data for {symbol}: {e}")
 
 
-def get_data(use_local_csv=True, asset_type="crypto", symbols=None, days=7):
+def get_data(use_local_csv=True, asset_type="crypto", symbols=None, intraday_days=3):
     """
     Fetch market data - prefer local CSV, fall back to APIs
     """
-
     if symbols is None:
         symbols = ["BTC", "ETH"]
 
@@ -146,41 +143,24 @@ def get_data(use_local_csv=True, asset_type="crypto", symbols=None, days=7):
         fetch_stock_data(symbols)
         return
 
-    # Step 1: Check for local CSV files
     if use_local_csv:
         print("\n📁 Checking for local CSV files in tv_data/...\n")
-
         csv_dir = Path("tv_data")
-        if csv_dir.exists():
-            csv_files = list(csv_dir.glob("*.csv"))
-            if csv_files:
-                print(f"Found {len(csv_files)} CSV file(s):")
-                for csv_file in csv_files:
-                    print(f"  • {csv_file.name}")
-
-                print("\n🔄 Converting CSV to JSON format...\n")
-                converted = convert_all_csv_files("tv_data", ".")
-
-                if converted:
-                    print("\n✅ Local CSV data loaded successfully!")
-                    print(f"   {len(converted)} files converted and ready for trading")
-                    return
-                else:
-                    print("\n⚠️  CSV conversion failed, falling back to API...")
-            else:
-                print("ℹ️  No CSV files found in tv_data/")
-                print("   Tip: Add TradingView CSV exports to tv_data/ folder\n")
+        if csv_dir.exists() and any(csv_dir.iterdir()):
+            print(f"Found CSV files in {csv_dir}. Converting...")
+            convert_all_csv_files(str(csv_dir), "data")
+            print("\n✅ Local CSV data loaded successfully!")
+            return
         else:
-            print("ℹ️  tv_data/ directory not found")
-            print("   Creating: mkdir tv_data")
-            os.makedirs("tv_data", exist_ok=True)
+            print("ℹ️  No CSV files found in tv_data/, falling back to API...")
 
-    # Step 2: Fall back to API based on asset type
     if asset_type == "crypto":
         print("\n📡 Fetching data from CoinGecko API...")
         print(f"   Symbols: {', '.join(symbols)}")
-        print(f"   Days: {days}\n")
-        fetch_from_coingecko(symbols=symbols, days=days, output_dir=".")
+        print(f"   Intraday Days: {intraday_days}\n")
+        fetch_from_coingecko(
+            symbols=symbols, intraday_days=intraday_days, daily_days=180, output_dir="data"
+        )
         print("\n✅ Data fetched successfully from CoinGecko!")
     else:
         print(f"\n⚠️  Unsupported asset type for API fallback: {asset_type}")
@@ -190,38 +170,29 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Unified data fetcher")
-    parser.add_argument(
-        "--no-csv", action="store_true", help="Skip local CSV, use API only"
-    )
-    parser.add_argument(
-        "--asset-type", default="crypto", help="Asset type: crypto, stock, or futures"
-    )
+    parser.add_argument("--no-csv", action="store_true", help="Skip local CSV, use API only")
+    parser.add_argument("--asset-type", default="crypto", help="Asset type: crypto, stock, or futures")
     parser.add_argument("--symbols", default="BTC,ETH", help="Comma-separated symbols")
 
     args = parser.parse_args()
 
-    # Calculate days from environment variables
     start_str = os.getenv("START_DATETIME")
     end_str = os.getenv("END_DATETIME")
-    days_to_fetch = 7  # Default value
+    intraday_days_to_fetch = 3
 
     if start_str and end_str:
         try:
             start_dt = datetime.strptime(start_str, "%m%d%y %H%M")
             end_dt = datetime.strptime(end_str, "%m%d%y %H%M")
             delta = end_dt - start_dt
-            days_to_fetch = delta.days + 1
-            if days_to_fetch <= 0:
-                days_to_fetch = 1
-            print(
-                f"🗓️ Calculated days to fetch from environment variables: {days_to_fetch}"
-            )
+            intraday_days_to_fetch = delta.days + 1
+            if intraday_days_to_fetch <= 0:
+                intraday_days_to_fetch = 1
+            print(f"🗓️ Calculated intraday days to fetch: {intraday_days_to_fetch}")
         except ValueError:
-            print(
-                f"⚠️ Could not parse START_DATETIME or END_DATETIME. Using default {days_to_fetch} days."
-            )
+            print(f"⚠️ Could not parse START_DATETIME or END_DATETIME. Using default {intraday_days_to_fetch} days.")
     else:
-        print(f"🗓️ Using default days to fetch: {days_to_fetch}")
+        print(f"🗓️ Using default intraday days to fetch: {intraday_days_to_fetch}")
 
     symbols = [s.strip().upper() for s in args.symbols.split(",")]
 
@@ -229,5 +200,5 @@ if __name__ == "__main__":
         use_local_csv=not args.no_csv,
         asset_type=args.asset_type,
         symbols=symbols,
-        days=days_to_fetch,
+        intraday_days=intraday_days_to_fetch,
     )
