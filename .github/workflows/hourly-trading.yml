@@ -106,7 +106,7 @@ jobs:
 
           # Use unified data fetcher (checks local CSV first, falls back to API)
           echo "📊 Fetching data with unified CSV-first strategy..."
-          python get_data.py --asset-type "$ASSET_TYPE" --symbols "$SYMBOLS"
+          python get_data.py --asset-type "$ASSET_TYPE" --symbols "$SYMBOLS" --no-csv
 
           # Merge data for dashboard
           python merge_jsonl.py --asset_type "$ASSET_TYPE"
