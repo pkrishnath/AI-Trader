@@ -5,6 +5,7 @@ Unified data fetcher - checks for local CSV first, then falls back to APIs
 
 import os
 from pathlib import Path
+from datetime import datetime
 from convert_csv_to_json import convert_csv_to_json, convert_all_csv_files
 from get_crypto_prices import (
     fetch_all_crypto_data as fetch_from_coingecko,
@@ -73,7 +74,7 @@ def fetch_futures_data(symbols: list):
             print(f"Error processing data for {symbol}: {e}")
 
 
-def get_data(use_local_csv=True, asset_type="crypto", symbols=None, days=90):
+def get_data(use_local_csv=True, asset_type="crypto", symbols=None, days=7):
     """
     Fetch market data - prefer local CSV, fall back to APIs
     """
@@ -145,9 +146,28 @@ if __name__ == "__main__":
     parser.add_argument(
         "--symbols", default="BTC,ETH", help="Comma-separated symbols"
     )
-    parser.add_argument("--days", type=int, default=90, help="Days of data to fetch")
 
     args = parser.parse_args()
+
+    # Calculate days from environment variables
+    start_str = os.getenv("START_DATETIME")
+    end_str = os.getenv("END_DATETIME")
+    days_to_fetch = 7  # Default value
+
+    if start_str and end_str:
+        try:
+            start_dt = datetime.strptime(start_str, "%m%d%y %H%M")
+            end_dt = datetime.strptime(end_str, "%m%d%y %H%M")
+            delta = end_dt - start_dt
+            # Add 1 to make the range inclusive
+            days_to_fetch = delta.days + 1
+            if days_to_fetch <= 0:
+                days_to_fetch = 1
+            print(f"🗓️ Calculated days to fetch from environment variables: {days_to_fetch}")
+        except ValueError:
+            print(f"⚠️ Could not parse START_DATETIME or END_DATETIME. Using default {days_to_fetch} days.")
+    else:
+        print(f"🗓️ Using default days to fetch: {days_to_fetch}")
 
     symbols = [s.strip().upper() for s in args.symbols.split(",")]
 
@@ -155,5 +175,5 @@ if __name__ == "__main__":
         use_local_csv=not args.no_csv,
         asset_type=args.asset_type,
         symbols=symbols,
-        days=args.days,
+        days=days_to_fetch,
     )
