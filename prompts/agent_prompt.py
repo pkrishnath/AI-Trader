@@ -157,7 +157,7 @@ positions[101] {symbol,shares}
   CASH 7500.25
   ...
 The first line `positions[101]` indicates the number of assets.
-The second line `{symbol,shares}` defines the columns.
+The second line `{{symbol,shares}}` defines the columns.
 Each subsequent line is an asset and the number of shares you hold. CASH is also included.
 
 Notes:

@@ -115,7 +115,7 @@ prices[60] {datetime,open,high,low,close}
   "2025-11-03 09:31:00" 18002.00 18008.75 18001.50 18008.25
   ...
 The first line `prices[60]` indicates there are 60 price candles.
-The second line `{datetime,open,high,low,close}` defines the columns.
+The second line `{{datetime,open,high,low,close}}` defines the columns.
 Each subsequent line is a candle's data.
 
 Notes:

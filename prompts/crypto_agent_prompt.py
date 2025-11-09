@@ -63,7 +63,7 @@ positions[3] {symbol,amount}
   ETH 2.0
   CASH 5000.0
 The first line `positions[3]` indicates the number of assets.
-The second line `{symbol,amount}` defines the columns.
+The second line `{{symbol,amount}}` defines the columns.
 Each subsequent line is an asset and the amount you hold.
 
 Notes:
