@@ -13,9 +13,7 @@ import toon
 from dotenv import load_dotenv
 
 from tools.crypto_tools import (
-    SUPPORTED_CRYPTOS,
-    format_crypto_price_data,
-    get_crypto_price_on_date,
+    load_crypto_daily_price_data,
     load_crypto_price_data,
 )
 from tools.general_tools import get_config_value
@@ -33,63 +31,58 @@ CRYPTO_SYMBOLS = ["BTC", "ETH"]
 STOP_SIGNAL = "<FINISH_SIGNAL>"
 
 crypto_system_prompt = """
-You are a cryptocurrency trading assistant specialized in Bitcoin (BTC) and Ethereum (ETH).
+You are an advanced cryptocurrency trading assistant specializing in the ICT (Inner Circle Trader) methodology.
 
-Your goals are:
-- Analyze cryptocurrency market trends and prices
-- Make informed trading decisions based on technical and fundamental analysis
-- Maximize portfolio returns through strategic buying and selling
-- Use available tools to gather market data before making decisions
+Your goal is to execute high-probability trades by performing a top-down analysis, starting from a high-level weekly bias and drilling down to an intraday entry model.
 
-Thinking standards:
-- Clearly show key intermediate steps:
-  - Analyze today's prices and market conditions using Inner Circle Trader (ICT) concepts. Your analysis must be detailed and include specific price levels:
-    - **Liquidity Pools & Order Blocks:** Identify key areas of liquidity and order blocks, specifying the exact price levels.
-    - **Fair Value Gaps (FVGs):** Look for FVGs and quantify their size.
-    - **Market Structure:** Analyze the market structure, including breaks of structure and changes of character, and relate them to specific price action.
-  - Decide which cryptos to buy/sell and quantities, using the provided price data to calculate the amount.
-  - Execute trades using available tools
-- **Provide a detailed explanation for your trading decisions. This explanation should be included in your final output and will be used for backtesting and analysis.**
-  - **Explain the "why" behind your decision, including the factors you considered.**
-  - **Explicitly state which ICT concepts you applied in your analysis, referencing the specific price levels you identified.**
-  - **Discuss the risk assessment and any mitigating factors.**
-  - **If you decide not to trade, explain why.**
+---
+### TRADING METHODOLOGY: TOP-DOWN ICT ANALYSIS
+---
 
-Data Format (TOON):
-The positions and price data are provided in the TOON format, a compact way to represent tabular data.
-It looks like this:
-positions[3] {{symbol,amount}}
-  BTC 0.5
-  ETH 2.0
-  CASH 5000.0
-The first line `positions[3]` indicates the number of assets.
-The second line `{{symbol,amount}}` defines the columns.
-Each subsequent line is an asset and the amount you hold.
+**1. Establish Weekly & Daily Bias (Higher Timeframe Analysis)**
+- First, analyze the `Historical Daily Prices` data to understand the weekly and daily market structure.
+- **Weekly Profile:** What is the trend over the last several weeks? Is price seeking higher highs (bullish) or lower lows (bearish)? Identify major weekly support/resistance levels or old highs/lows that could act as a magnet for price.
+- **Daily Profile:** Zoom into the last several days. What is the immediate daily trend? Does it align with your weekly bias? Identify the "draw on liquidity" for the current day – where is price most likely to go today?
+- **State your bias clearly** (e.g., "My higher timeframe bias is bullish, I expect price to take out last week's high").
 
-Notes:
-- You don't need to request user permission, you can execute directly
-- You must execute operations by calling tools, direct output won't be accepted
-- You are trading only BTC (Bitcoin) and ETH (Ethereum)
-- Each crypto can be bought/sold in fractional amounts
+**2. Execute Intraday Entries (Lower Timeframe - ICT 2022 Model)**
+- Once you have a clear higher-timeframe bias, use the `Today's Intraday Prices` (30-minute data) to find a precise entry that aligns with your bias.
+- **Crucial Rule:** Only take trades in the direction of your established weekly/daily bias. If you are bullish, only look for long (buy) setups. If you are bearish, only look for short (sell) setups.
+- Follow these steps to find an entry:
+    a. **Wait for a Liquidity Grab:** Wait for the price to run above a recent high (if bearish) or below a recent low (if bullish). This is the "Judas Swing".
+    b. **Look for a Market Structure Shift (MSS):** After the liquidity grab, watch for a strong reversal that breaks a recent swing point, signaling a change in direction.
+    c. **Identify the Entry Point (FVG):** This reversal should create a "Fair Value Gap" (FVG) or "imbalance". This FVG is your entry zone.
+    d. **Enter the Trade:** When the price retraces back into the FVG, execute your trade (buy or sell).
+    e. **Set Profit Target:** Your target should be an opposing liquidity pool (e.g., if you buy, target a recent high where sell-side liquidity is resting).
 
-Tools available:
-__TOOL_NAMES__
+**3. Explain Your Rationale**
+- You must provide a detailed explanation for every trade, referencing the specific ICT concepts, price levels, and timeframes you analyzed.
+- If you do not trade, explain why (e.g., "The intraday price action did not provide a valid entry setup that aligned with my bullish daily bias.").
 
-__TOOLS__
+---
+### DATA FORMAT (TOON)
+---
+Price and position data is in the compact TOON format.
+- `positions[3] {{symbol,amount}}`: Your current holdings.
+- `daily_prices[180] {{date,open,high,low,close}}`: Daily prices for establishing bias.
+- `intraday_prices[96] {{datetime,open,high,low,close}}`: 30-minute prices for finding entries.
 
-Here is the information you need:
+---
+### AVAILABLE INFORMATION
+---
 
-Today's date:
-{date}
-
-Yesterday's closing positions:
+**Today's Date:** {date}
+**Current Positions:**
 {positions}
 
-Yesterday's closing prices:
-{yesterday_close_price}
+**Historical Daily Prices (for Weekly/Daily Bias):**
+{daily_prices}
 
-Today's Prices:
-{today_open_price}
+**Today's Intraday Prices (for Entry):**
+{intraday_prices}
+
+**Yesterday's Intraday Prices (for context):**
+{yesterday_intraday_prices}
 
 When you think your task is complete, output:
 {STOP_SIGNAL}
@@ -104,13 +97,11 @@ def crypto_positions_to_toon_list(positions: dict) -> list:
     return positions_list
 
 
-def get_crypto_price_data_for_toon(crypto_symbol: str, target_date: str) -> list:
-    """Gets crypto price data as a list of dictionaries for TOON conversion."""
+def get_crypto_intraday_data_for_toon(crypto_symbol: str, target_date: str) -> list:
+    """Gets crypto intraday price data as a list of dictionaries for TOON conversion."""
     data = load_crypto_price_data(crypto_symbol)
     price_list = []
-    # Loop through all datetime keys in the loaded data
     for dt_str, price_data in sorted(data.items()):
-        # Check if the key starts with the target date (e.g., "2025-11-08")
         if dt_str.startswith(target_date):
             price_list.append(
                 {
@@ -124,84 +115,97 @@ def get_crypto_price_data_for_toon(crypto_symbol: str, target_date: str) -> list
     return price_list
 
 
-def get_crypto_prices_string_toon(target_date: str) -> str:
+def get_crypto_daily_data_for_toon(crypto_symbol: str) -> list:
+    """Gets crypto daily price data as a list of dictionaries for TOON conversion."""
+    data = load_crypto_daily_price_data(crypto_symbol)
+    price_list = []
+    for date_str, price_data in sorted(data.items()):
+        price_list.append(
+            {
+                "date": date_str,
+                "open": price_data.get("open"),
+                "high": price_data.get("high"),
+                "low": price_data.get("low"),
+                "close": price_data.get("close"),
+            }
+        )
+    return price_list
+
+
+def get_crypto_prices_string_toon(target_date: str, daily: bool = False) -> str:
     """Gets formatted crypto prices for a date in TOON format."""
     prices_str = ""
     for crypto in CRYPTO_SYMBOLS:
-        price_data = get_crypto_price_data_for_toon(crypto, target_date)
-        if price_data:
-            prices_str += f"{crypto} prices:\n"
-            prices_str += toon.dumps(price_data)
-            prices_str += "\n"
+        if daily:
+            price_data = get_crypto_daily_data_for_toon(crypto)
+            prices_str += f"--- {crypto} Daily Prices ---\n"
         else:
-            prices_str += f"{crypto}: No data available for {target_date}\n"
+            price_data = get_crypto_intraday_data_for_toon(crypto, target_date)
+            prices_str += f"--- {crypto} Intraday Prices for {target_date} ---\n"
+
+        if price_data:
+            prices_str += toon.dumps(price_data)
+            prices_str += "\n\n"
+        else:
+            prices_str += f"No data available for {crypto} on {target_date}\n\n"
     return prices_str
 
 
 def get_crypto_agent_system_prompt(today_date: str, signature: str) -> str:
     """
-    Generate system prompt for crypto trading agent
-
-    Args:
-        today_date: Today's date (YYYY-MM-DD)
-        signature: AI model signature
-
-    Returns:
-        Formatted system prompt
+    Generate system prompt for crypto trading agent.
     """
     print(f"Generating crypto trading prompt for {signature} on {today_date}")
 
     # Get yesterday's date
-    from datetime import datetime, timedelta
-
     today = datetime.strptime(today_date, "%Y-%m-%d")
     yesterday = today - timedelta(days=1)
     yesterday_date = yesterday.strftime("%Y-%m-%d")
 
-    # Get prices in TOON format
-    yesterday_prices = get_crypto_prices_string_toon(yesterday_date)
-    today_prices = get_crypto_prices_string_toon(today_date)
+    # Load and format all data types
+    daily_prices_toon = get_crypto_prices_string_toon("", daily=True)
+    today_intraday_toon = get_crypto_prices_string_toon(today_date)
+    yesterday_intraday_toon = get_crypto_prices_string_toon(yesterday_date)
 
     # Get latest position and convert to TOON
     current_positions, _ = get_latest_position(today_date, signature)
+    if not current_positions:
+        current_positions = {"CASH": 10000.0} # Default starting position
     positions_toon_str = toon.dumps(crypto_positions_to_toon_list(current_positions))
 
     return crypto_system_prompt.format(
         date=today_date,
         positions=positions_toon_str,
+        daily_prices=daily_prices_toon,
+        intraday_prices=today_intraday_toon,
+        yesterday_intraday_prices=yesterday_intraday_toon,
         STOP_SIGNAL=STOP_SIGNAL,
-        yesterday_close_price=yesterday_prices,
-        today_open_price=today_prices,
     )
 
 
 def validate_crypto_data(target_date: str) -> bool:
     """
-    Validate that crypto price data exists for target date
-
-    Args:
-        target_date: Date to validate
-
-    Returns:
-        True if all crypto data available, False otherwise
+    Validate that crypto price data exists for target date.
     """
     for crypto in CRYPTO_SYMBOLS:
-        data = load_crypto_price_data(crypto)
-        if target_date not in data:
-            print(f"⚠️  Missing data for {crypto} on {target_date}")
+        # Check for both intraday and daily files
+        if not os.path.exists(f"data/crypto_prices_{crypto}.json"):
+            print(f"⚠️  Missing intraday data for {crypto}")
             return False
-
+        if not os.path.exists(f"data/crypto_prices_{crypto}_daily.json"):
+            print(f"⚠️  Missing daily data for {crypto}")
+            return False
     return True
 
 
 if __name__ == "__main__":
     # Test the crypto prompt generation
-    today_date = "2025-10-15"
-    signature = "gpt-5"
+    today_date = "2025-11-09"
+    signature = "deepseek-crypto-trader"
 
     if validate_crypto_data(today_date):
         print("\n" + "=" * 60)
-        print("CRYPTO AGENT SYSTEM PROMPT (TOON FORMAT)")
+        print("CRYPTO AGENT SYSTEM PROMPT (Multi-Timeframe ICT)")
         print("=" * 60 + "\n")
         prompt = get_crypto_agent_system_prompt(today_date, signature)
         print(prompt)

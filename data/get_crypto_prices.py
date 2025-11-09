@@ -7,9 +7,8 @@ CoinGecko API is free and doesn't require authentication
 
 import json
 import os
-from datetime import datetime, timedelta
-from pathlib import Path
-
+import time
+from datetime import datetime
 import requests
 
 # CoinGecko API endpoints
@@ -19,160 +18,128 @@ COINGECKO_API = "https://api.coingecko.com/api/v3"
 CRYPTO_MAP = {"BTC": "bitcoin", "ETH": "ethereum"}
 
 
-def get_crypto_historical_data(symbol: str, days: int = 30) -> dict:
+def get_crypto_daily_data(symbol: str, days: int = 180) -> dict:
     """
-    Fetch historical cryptocurrency price data from CoinGecko
-
-    Args:
-        symbol: Crypto symbol (BTC, ETH)
-        days: Number of days of historical data to fetch
-
-    Returns:
-        Dictionary with OHLCV data
+    Fetch historical daily cryptocurrency price data from CoinGecko.
     """
     if symbol not in CRYPTO_MAP:
         raise ValueError(f"Unsupported crypto symbol: {symbol}")
-
     crypto_id = CRYPTO_MAP[symbol]
-
     try:
         url = f"{COINGECKO_API}/coins/{crypto_id}/ohlc"
-        params = {"vs_currency": "usd", "days": days}
-
-        print(f"Fetching {days}-day historical OHLC data for {symbol}...")
+        params = {"vs_currency": "usd", "days": str(days)}
+        print(f"Fetching {days}-day DAILY OHLC data for {symbol}...")
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
-
         data = response.json()
-
         if not data:
-            print(f"No OHLC data found for {symbol}")
+            print(f"No DAILY OHLC data found for {symbol}")
             return {}
 
-        # Convert to OHLCV format (4-hour)
         ohlcv_data = {}
         for ohlc_point in data:
-            timestamp = ohlc_point[0]  # milliseconds
-            o = ohlc_point[1]
-            h = ohlc_point[2]
-            l = ohlc_point[3]
-            c = ohlc_point[4]
-
-            # Convert timestamp to datetime string (YYYY-MM-DD HH:MM:SS)
-            dt_object = datetime.fromtimestamp(timestamp / 1000)
-            datetime_str = dt_object.strftime("%Y-%m-%d %H:%M:%S")
-
-            ohlcv_data[datetime_str] = {
-                "date": datetime_str,
-                "open": o,
-                "high": h,
-                "low": l,
-                "close": c,
-                "volume": 0, # Volume is not provided by this endpoint
+            dt_object = datetime.fromtimestamp(ohlc_point[0] / 1000)
+            date_str = dt_object.strftime("%Y-%m-%d")
+            ohlcv_data[date_str] = {
+                "date": date_str,
+                "open": ohlc_point[1],
+                "high": ohlc_point[2],
+                "low": ohlc_point[3],
+                "close": ohlc_point[4],
+                "volume": 0,
             }
-
-        print(f"✓ Retrieved {len(ohlcv_data)} data points for {symbol}")
+        print(f"✓ Retrieved {len(ohlcv_data)} daily data points for {symbol}")
         return ohlcv_data
-
     except requests.exceptions.RequestException as e:
-        print(f"✗ Error fetching data for {symbol}: {e}")
+        print(f"✗ Error fetching daily data for {symbol}: {e}")
         return {}
 
 
-def get_crypto_current_price(symbol: str) -> float:
+def get_crypto_intraday_data(symbol: str, days: int = 3) -> dict:
     """
-    Get current price for a cryptocurrency
-
-    Args:
-        symbol: Crypto symbol (BTC, ETH)
-
-    Returns:
-        Current price in USD
+    Fetch historical intraday (30-min) cryptocurrency price data from CoinGecko.
     """
     if symbol not in CRYPTO_MAP:
         raise ValueError(f"Unsupported crypto symbol: {symbol}")
-
     crypto_id = CRYPTO_MAP[symbol]
-
     try:
-        url = f"{COINGECKO_API}/simple/price"
-        params = {"ids": crypto_id, "vs_currencies": "usd"}
-
+        url = f"{COINGECKO_API}/coins/{crypto_id}/ohlc"
+        params = {"vs_currency": "usd", "days": str(days)}
+        print(f"Fetching {days}-day INTRADAY OHLC data for {symbol}...")
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
-
         data = response.json()
-        price = data.get(crypto_id, {}).get("usd", 0)
+        if not data:
+            print(f"No INTRADAY OHLC data found for {symbol}")
+            return {}
 
-        print(f"{symbol} current price: ${price:,.2f}")
-        return price
-
+        ohlcv_data = {}
+        for ohlc_point in data:
+            dt_object = datetime.fromtimestamp(ohlc_point[0] / 1000)
+            datetime_str = dt_object.strftime("%Y-%m-%d %H:%M:%S")
+            ohlcv_data[datetime_str] = {
+                "date": datetime_str,
+                "open": ohlc_point[1],
+                "high": ohlc_point[2],
+                "low": ohlc_point[3],
+                "close": ohlc_point[4],
+                "volume": 0,
+            }
+        print(f"✓ Retrieved {len(ohlcv_data)} intraday data points for {symbol}")
+        return ohlcv_data
     except requests.exceptions.RequestException as e:
-        print(f"✗ Error fetching current price for {symbol}: {e}")
-        return 0
+        print(f"✗ Error fetching intraday data for {symbol}: {e}")
+        return {}
 
 
-def save_crypto_data(symbol: str, data: dict, output_dir: str = "data") -> str:
+def save_crypto_data(symbol: str, data: dict, output_dir: str = "data", suffix: str = "") -> str:
     """
-    Save cryptocurrency data to JSON file
-
-    Args:
-        symbol: Crypto symbol
-        data: OHLCV data dictionary
-        output_dir: Output directory path
-
-    Returns:
-        Path to saved file
+    Save cryptocurrency data to JSON file.
     """
     os.makedirs(output_dir, exist_ok=True)
-
-    filename = f"{output_dir}/crypto_prices_{symbol}.json"
-
+    filename = f"{output_dir}/crypto_prices_{symbol}{suffix}.json"
     with open(filename, "w") as f:
         json.dump(data, f, indent=2)
-
     print(f"✓ Saved {symbol} data to {filename}")
     return filename
 
 
-def fetch_all_crypto_data(
-    symbols: list = None, days: int = 30, output_dir: str = "data"
-):
+def fetch_all_crypto_data(symbols: list = None, intraday_days: int = 3, daily_days: int = 180, output_dir: str = "data"):
     """
-    Fetch and save data for all cryptocurrencies
-
-    Args:
-        symbols: List of crypto symbols (default: BTC, ETH)
-        days: Number of days of historical data
-        output_dir: Output directory
+    Fetch and save both daily and intraday data for all cryptocurrencies.
     """
     if symbols is None:
         symbols = ["BTC", "ETH"]
 
     print("\n" + "=" * 60)
     print("CRYPTOCURRENCY PRICE DATA FETCHER")
-    print("=" * 60)
-    print(f"Fetching {days}-day historical data for: {', '.join(symbols)}")
-    print(f"Using free CoinGecko API (no authentication required)")
+    print(f"Fetching data for: {', '.join(symbols)}")
     print("=" * 60 + "\n")
 
     for symbol in symbols:
         try:
-            # Fetch historical data
-            historical_data = get_crypto_historical_data(symbol, days)
-
-            if historical_data:
-                # Save to file
-                save_crypto_data(symbol, historical_data, output_dir)
-
-                # Show current price
-                current_price = get_crypto_current_price(symbol)
-                print()
+            # Fetch and save daily data for high-level bias
+            daily_data = get_crypto_daily_data(symbol, days=daily_days)
+            if daily_data:
+                save_crypto_data(symbol, daily_data, output_dir, suffix="_daily")
             else:
-                print(f"⚠️  Failed to fetch data for {symbol}\n")
+                print(f"⚠️  Failed to fetch daily data for {symbol}\n")
+
+            # Add a small delay to be nice to the free API
+            time.sleep(1)
+
+            # Fetch and save intraday data for entries
+            intraday_data = get_crypto_intraday_data(symbol, days=intraday_days)
+            if intraday_data:
+                save_crypto_data(symbol, intraday_data, output_dir, suffix="")
+            else:
+                print(f"⚠️  Failed to fetch intraday data for {symbol}\n")
 
         except Exception as e:
             print(f"✗ Error processing {symbol}: {e}\n")
+        
+        print("-" * 20)
+        time.sleep(1) # Delay before next symbol
 
     print("=" * 60)
     print("✓ Cryptocurrency data fetch complete!")
@@ -183,10 +150,10 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Fetch cryptocurrency price data.')
     parser.add_argument('--symbols', type=str, default='BTC,ETH', help='Comma-separated list of crypto symbols to fetch.')
-    parser.add_argument('--days', type=int, default=60, help='Number of days of historical data to fetch.')
+    parser.add_argument('--intraday_days', type=int, default=3, help='Number of days of high-granularity intraday data to fetch.')
+    parser.add_argument('--daily_days', type=int, default=180, help='Number of days of daily data to fetch for context.')
     args = parser.parse_args()
     
-    symbols = [s.strip().upper() for s in args.symbols.split(',')]
+    symbols_list = [s.strip().upper() for s in args.symbols.split(',')]
     
-    # Fetch historical data for the given symbols
-    fetch_all_crypto_data(symbols=symbols, days=args.days, output_dir=".")
+    fetch_all_crypto_data(symbols=symbols_list, intraday_days=args.intraday_days, daily_days=args.daily_days, output_dir=".")

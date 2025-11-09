@@ -14,14 +14,7 @@ SUPPORTED_CRYPTOS = ["BTC", "ETH"]
 
 def load_crypto_price_data(crypto_symbol: str, data_dir: str = "data") -> Dict:
     """
-    Load cryptocurrency price data from JSON file
-
-    Args:
-        crypto_symbol: Crypto symbol (BTC, ETH)
-        data_dir: Directory containing price data
-
-    Returns:
-        Dictionary with date -> OHLCV data
+    Load cryptocurrency intraday price data from JSON file.
     """
     if crypto_symbol not in SUPPORTED_CRYPTOS:
         raise ValueError(f"Unsupported cryptocurrency: {crypto_symbol}")
@@ -34,35 +27,29 @@ def load_crypto_price_data(crypto_symbol: str, data_dir: str = "data") -> Dict:
 
     try:
         with open(price_file, "r") as f:
-            data = json.load(f)
-        # Auto-generate last 7 days missing data so workflow can run "last 7 days" without external API
-        try:
-            today = datetime.utcnow().date()
-            # Determine a base price
-            existing_dates = sorted(data.keys())
-            if existing_dates:
-                last_known = data[existing_dates[-1]]["close"]
-            else:
-                # Fallback base prices
-                last_known = 50000 if crypto_symbol == "BTC" else 3000
-            for offset in range(6, -1, -1):  # past 6 days plus today
-                d = today.fromordinal(today.toordinal() - offset)
-                ds = d.isoformat()
-                if ds not in data:
-                    data[ds] = {
-                        "date": ds,
-                        "open": last_known,
-                        "high": last_known,
-                        "low": last_known,
-                        "close": last_known,
-                        "volume": 0,
-                    }
-                    # keep price flat; could add small variation if desired
-        except Exception as _e:
-            pass
-        return data
+            return json.load(f)
     except Exception as e:
         print(f"Error loading {crypto_symbol} data: {e}")
+        return {}
+
+def load_crypto_daily_price_data(crypto_symbol: str, data_dir: str = "data") -> Dict:
+    """
+    Load cryptocurrency daily price data from JSON file.
+    """
+    if crypto_symbol not in SUPPORTED_CRYPTOS:
+        raise ValueError(f"Unsupported cryptocurrency: {crypto_symbol}")
+
+    price_file = os.path.join(data_dir, f"crypto_prices_{crypto_symbol}_daily.json")
+
+    if not os.path.exists(price_file):
+        print(f"⚠️  Daily price data not found for {crypto_symbol}: {price_file}")
+        return {}
+
+    try:
+        with open(price_file, "r") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading daily {crypto_symbol} data: {e}")
         return {}
 
 
@@ -70,15 +57,7 @@ def get_crypto_price_on_date(
     crypto_symbol: str, target_date: str, price_type: str = "close"
 ) -> Optional[float]:
     """
-    Get the latest cryptocurrency price on a specific date.
-
-    Args:
-        crypto_symbol: Crypto symbol (BTC, ETH)
-        target_date: Date string (YYYY-MM-DD)
-        price_type: Type of price (open, close, high, low)
-
-    Returns:
-        Price value or None if not found
+    Get the latest cryptocurrency price on a specific date from intraday data.
     """
     data = load_crypto_price_data(crypto_symbol)
 
@@ -87,7 +66,6 @@ def get_crypto_price_on_date(
 
     for dt_str in data.keys():
         if dt_str.startswith(target_date):
-            # Handle both formats: "YYYY-MM-DD HH:MM:SS" and "YYYY-MM-DD"
             try:
                 dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
             except ValueError:
@@ -104,13 +82,6 @@ def get_crypto_price_on_date(
 def format_crypto_price_data(crypto_symbol: str, target_date: str) -> str:
     """
     Format cryptocurrency price data for display in agent prompt.
-
-    Args:
-        crypto_symbol: Crypto symbol (BTC, ETH)
-        target_date: Date to get prices for
-
-    Returns:
-        Formatted string with all 4-hour price data for the day.
     """
     data = load_crypto_price_data(crypto_symbol)
     
@@ -135,15 +106,6 @@ def calculate_crypto_returns(
 ) -> Optional[Dict]:
     """
     Calculate returns from a crypto trade
-
-    Args:
-        crypto_symbol: Crypto symbol (BTC, ETH)
-        purchase_date: Purchase date (YYYY-MM-DD)
-        purchase_price: Purchase price
-        sale_date: Sale date (YYYY-MM-DD)
-
-    Returns:
-        Dictionary with return metrics or None if dates not found
     """
     sale_price = get_crypto_price_on_date(crypto_symbol, sale_date, "close")
 
@@ -167,12 +129,6 @@ def calculate_crypto_returns(
 def validate_crypto_data(crypto_symbols: list = None) -> Dict[str, bool]:
     """
     Validate that crypto price data is available and loaded
-
-    Args:
-        crypto_symbols: List of symbols to validate (default: all)
-
-    Returns:
-        Dictionary with symbol -> available status
     """
     if crypto_symbols is None:
         crypto_symbols = SUPPORTED_CRYPTOS
@@ -188,12 +144,6 @@ def validate_crypto_data(crypto_symbols: list = None) -> Dict[str, bool]:
 def get_crypto_price_summary(crypto_symbols: list = None) -> str:
     """
     Get summary of available crypto price data
-
-    Args:
-        crypto_symbols: List of symbols (default: all)
-
-    Returns:
-        Formatted summary string
     """
     if crypto_symbols is None:
         crypto_symbols = SUPPORTED_CRYPTOS
